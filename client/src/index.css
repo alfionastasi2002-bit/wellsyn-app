@@ -33,16 +33,12 @@
 }
 
 /* Varianti per l'altezza dello schermo (login e registrazione):
-   short ≤ 820px (es. MacBook 13") · tiny ≤ 640px · roomy ≥ 960px (monitor grandi).
+   short ≤ 820px (es. MacBook 13") · tiny ≤ 660px · roomy ≥ 960px (monitor grandi).
    L'ordine conta: "tiny" viene dopo "short" così, quando valgono entrambe, vince "tiny". */
 @custom-variant short (@media (max-height: 820px));
-@custom-variant tiny (@media (max-height: 640px));
+@custom-variant tiny (@media (max-height: 660px));
 @custom-variant roomy (@media (min-height: 960px));
 
-/* Vetrina del login: mostra più contenuti solo se c'è abbastanza altezza (container query). */
-@custom-variant sc-cards (@container showcase (min-height: 545px));
-@custom-variant sc-text (@container showcase (min-height: 665px));
-@custom-variant sc-quote (@container showcase (min-height: 800px));
 
 /* Scorrimento senza barra visibile (menu laterale). */
 @utility no-scrollbar {
