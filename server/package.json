@@ -6,7 +6,8 @@
   "main": "src/app.js",
   "scripts": {
     "dev": "node --watch-path=src src/index.js",
-    "start": "node src/index.js",
+    "dev:online": "node --watch-path=src src/index.js --online",
+    "start": "node src/index.js --online",
     "seed": "node src/seed/run.js"
   },
   "dependencies": {

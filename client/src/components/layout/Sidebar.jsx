@@ -1,11 +1,10 @@
-import { ChevronRight, Leaf, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Link, NavLink } from 'react-router';
-import { NAVIGATION, SIDEBAR_PROMO } from '../../navigation.js';
+import { NAVIGATION } from '../../navigation.js';
 import { LogoStacked } from '../Logo.jsx';
 
 export function Sidebar({ role, counters, open, onClose }) {
   const items = NAVIGATION[role] ?? [];
-  const promo = SIDEBAR_PROMO[role];
 
   return (
     <>
@@ -32,11 +31,11 @@ export function Sidebar({ role, counters, open, onClose }) {
           <X className="h-5 w-5" />
         </button>
 
-        <Link to="/app" onClick={onClose} className="mx-auto mb-7">
+        <Link to="/app" onClick={onClose} className="mx-auto mb-7 shrink-0">
           <LogoStacked />
         </Link>
 
-        <nav className="flex-1 overflow-y-auto">
+        <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
           <ul className="space-y-1">
             {items.map(({ path, label, icon: Icon, badge }) => {
               const count = badge ? counters?.[badge] : 0;
@@ -67,19 +66,6 @@ export function Sidebar({ role, counters, open, onClose }) {
             })}
           </ul>
         </nav>
-
-        {promo && (
-          <div className="mt-4 rounded-2xl bg-mint p-5">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-white text-brand-700">
-              <Leaf className="h-5 w-5" />
-            </span>
-            <p className="mt-3 font-display text-lg leading-snug font-semibold text-ink-900">{promo.title}</p>
-            <p className="mt-1 text-sm text-ink-700">{promo.text}</p>
-            <Link to="/app/supporto" onClick={onClose} className="btn-primary mt-4 w-full justify-between">
-              {promo.cta} <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-        )}
       </aside>
     </>
   );

@@ -133,6 +133,16 @@ router.get('/client', requireRole('client'), async (req, res) => {
       next: sessionSummary(upcoming),
       completedToday: workoutLogs.some((l) => l.day === today && l.completed),
       week: thisWeek,
+      // Lunedì -> domenica della settimana in corso, con la sessione prevista e se è stata svolta
+      days: Array.from({ length: 7 }, (_, i) => {
+        const day = addDays(weekStart(today), i);
+        return {
+          day,
+          weekday: i + 1,
+          session: sessions.find((s) => s.dayOfWeek === i + 1)?.name ?? null,
+          completed: workoutLogs.some((l) => l.day === day && l.completed),
+        };
+      }),
     },
     meals: mealPlan && {
       planId: String(mealPlan._id),
@@ -214,8 +224,13 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
         status: fresh ? 'on_track' : 'needs_attention',
       };
     })
-    .sort((a, b) => (b.lastCheck?.getTime() ?? 0) - (a.lastCheck?.getTime() ?? 0))
-    .slice(0, 5);
+    // Prima chi è "da seguire", poi in ordine di ultimo controllo
+    .sort(
+      (a, b) =>
+        (a.status === 'needs_attention' ? 0 : 1) - (b.status === 'needs_attention' ? 0 : 1) ||
+        (b.lastCheck?.getTime() ?? 0) - (a.lastCheck?.getTime() ?? 0),
+    )
+    .slice(0, 6);
 
   const last = latestWithPrevious(checkins);
   const lastCheck = last && {

@@ -26,8 +26,8 @@ export default function LoginPage() {
       const user = await login({ ...form, role });
       // Torna alla pagina richiesta prima del login, se esiste per questo profilo.
       const from = location.state?.from;
-      const section = from?.split('/')[2];
-      const allowed = !section || NAVIGATION[user.role].some((item) => item.path === section);
+      const section = from?.split('?')[0].split('/')[2];
+      const allowed = !section || section === 'supporto' || NAVIGATION[user.role].some((item) => item.path === section);
       navigate(from && allowed ? from : '/app', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -39,13 +39,13 @@ export default function LoginPage() {
   return (
     <AuthShell>
       <div className="mx-auto max-w-[460px]">
-        <LogoStacked className="scale-110" />
-        <h1 className="mt-8 text-center font-display text-[30px] font-semibold">Bentornato su Wellsyn</h1>
-        <p className="mt-2 text-center text-[15px] text-ink-500">
+        <LogoStacked imgClassName="h-14 short:h-10 tiny:h-9" />
+        <h1 className="mt-6 text-center font-display text-[28px] font-semibold short:mt-3 short:text-2xl">Bentornato su Wellsyn</h1>
+        <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">
           Accedi al tuo spazio personale e continua il tuo percorso di benessere.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 short:mt-4 short:space-y-2.5" noValidate>
           <RolePicker value={role} onChange={setRole} />
           <Field
             icon={Mail}
@@ -94,18 +94,18 @@ export default function LoginPage() {
 
           <FormError>{error}</FormError>
 
-          <button type="submit" className="btn-primary w-full py-4 text-base" disabled={loading}>
+          <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3" disabled={loading}>
             {loading ? <Spinner className="h-5 w-5 text-white" /> : null}
             Accedi <ChevronRight className="h-5 w-5" />
           </button>
         </form>
 
-        <div className="my-6 flex items-center gap-4 text-sm text-ink-400">
+        <div className="my-5 flex items-center gap-4 text-sm text-ink-400 short:my-3 tiny:hidden">
           <span className="h-px flex-1 bg-line" /> oppure <span className="h-px flex-1 bg-line" />
         </div>
         <Link
           to="/registrati"
-          className="flex items-center justify-center gap-1 rounded-xl bg-[#f3f6f5] px-4 py-3.5 text-sm text-ink-700 transition hover:bg-[#eaf0ee]"
+          className="flex items-center justify-center gap-1 rounded-xl bg-[#f3f6f5] px-4 py-3.5 text-sm text-ink-700 transition hover:bg-[#eaf0ee] short:py-2.5 tiny:mt-3"
         >
           Non hai un account? <span className="font-semibold text-brand-800">Richiedi l'accesso</span>
           <ChevronRight className="h-4 w-4 text-brand-800" />

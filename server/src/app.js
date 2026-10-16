@@ -3,11 +3,16 @@ import express from 'express';
 import helmet from 'helmet';
 import { connectDB, describeDbError } from './config/db.js';
 import { errorHandler, notFound } from './middleware/errors.js';
+import appointmentsRoutes from './routes/appointments.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import checkinsRoutes from './routes/checkins.routes.js';
 import clientsRoutes from './routes/clients.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import mealPlansRoutes from './routes/mealPlans.routes.js';
 import meRoutes from './routes/me.routes.js';
+import messagesRoutes from './routes/messages.routes.js';
 import teamRoutes from './routes/team.routes.js';
+import workoutPlansRoutes from './routes/workoutPlans.routes.js';
 
 const app = express();
 
@@ -37,6 +42,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/me', meRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/team', teamRoutes);
+app.use('/api/meal-plans', mealPlansRoutes);
+app.use('/api/workout-plans', workoutPlansRoutes);
+app.use('/api/checkins', checkinsRoutes);
+app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/messages', messagesRoutes);
 
 app.use('/api', notFound);
 app.use(errorHandler);

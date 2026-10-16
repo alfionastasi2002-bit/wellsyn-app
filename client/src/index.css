@@ -32,6 +32,18 @@
   --shadow-float: 0 12px 32px -12px rgb(15 90 83 / 0.25);
 }
 
+/* Varianti per schermi bassi (es. portatili 13", smartphone): short: ≤ 760px, tiny: ≤ 640px di altezza. */
+@custom-variant short (@media (max-height: 760px));
+@custom-variant tiny (@media (max-height: 640px));
+
+/* Scorrimento senza barra visibile (menu laterale). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

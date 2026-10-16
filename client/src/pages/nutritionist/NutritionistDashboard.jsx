@@ -114,13 +114,13 @@ const STATUS = {
 function RecentClients({ clients }) {
   return (
     <Card className="p-5">
-      <CardHeader icon={Users} title="Clienti recenti" action={<ArrowLink to="/app/clienti">Vedi tutti</ArrowLink>} />
+      <CardHeader icon={Users} title="I tuoi clienti" action={<ArrowLink to="/app/clienti">Vedi tutti</ArrowLink>} />
       {clients.length === 0 ? (
         <EmptyState title="Nessun cliente" text="Aggiungi il tuo primo cliente dalla sezione Clienti.">
           <Link to="/app/clienti" className="btn-primary mt-2">Aggiungi cliente</Link>
         </EmptyState>
       ) : (
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 relative overflow-x-auto">
           <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
@@ -150,7 +150,7 @@ function RecentClients({ clients }) {
                       </span>
                     </td>
                     <td className="py-2.5 text-right">
-                      <Link to="/app/clienti" className="inline-block p-1 text-ink-400 hover:text-ink-700" aria-label={`Apri ${c.client.fullName}`}>
+                      <Link to={`/app/progressi?cliente=${c.client.id}`} className="inline-block p-1 text-ink-400 hover:text-ink-700" aria-label={`Progressi di ${c.client.fullName}`}>
                         <ChevronRight className="h-4 w-4" />
                       </Link>
                     </td>
@@ -170,7 +170,7 @@ const MEAL_LABELS = { colazione: 'Colazione', spuntino: 'Spuntino', pranzo: 'Pra
 function FeaturedPlan({ plan }) {
   return (
     <Card className="p-5">
-      <CardHeader icon={Utensils} title="Crea o modifica piano alimentare" action={<ArrowLink to="/app/piani-alimentari">Apri editor</ArrowLink>} />
+      <CardHeader icon={Utensils} title="Crea o modifica piano alimentare" action={<ArrowLink to={plan ? `/app/piani-alimentari/${plan.id}` : '/app/piani-alimentari/nuovo'}>Apri editor</ArrowLink>} />
       {!plan ? (
         <EmptyState title="Nessun piano attivo" text="Crea il primo piano alimentare per un tuo cliente." />
       ) : (
@@ -225,7 +225,7 @@ const diff = (a, b) => (a == null || b == null ? null : Math.round((a - b) * 10)
 function LastCheck({ check }) {
   return (
     <Card className="p-5">
-      <CardHeader icon={CalendarDays} title="Ultimo check" action={<ArrowLink to="/app/controlli">Vedi storico</ArrowLink>} />
+      <CardHeader icon={CalendarDays} title="Ultimo check" action={<ArrowLink to={check ? `/app/progressi?cliente=${check.client?.id}` : '/app/controlli'}>Vedi storico</ArrowLink>} />
       {!check ? (
         <EmptyState title="Nessun controllo registrato" />
       ) : (

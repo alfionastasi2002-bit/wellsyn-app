@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { clearAuthCookie, requireAuth, setAuthCookie } from '../middleware/auth.js';
 import { ROLES, User } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
+import { optionalNumber, optionalText } from '../utils/schemas.js';
 import { parse } from '../utils/validate.js';
 
 const router = Router();
@@ -88,6 +89,51 @@ router.post('/logout', (_req, res) => {
 
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+const name = (label) => z.string({ error: 'Inserisci ' + label + '.' }).trim().min(1, 'Inserisci ' + label + '.').max(60);
+const PROFILE_FIELDS = {
+  common: { firstName: name('il nome'), lastName: name('il cognome'), phone: optionalText(30) },
+  professional: { title: optionalText(20), specialization: optionalText(80), bio: optionalText(280) },
+  client: {
+    goal: optionalText(140),
+    heightCm: optionalNumber(100, 250, 'Altezza'),
+    startWeightKg: optionalNumber(20, 400, 'Peso iniziale'),
+  },
+};
+
+// Modifica del proprio profilo: si aggiornano solo i campi inviati (vuoto = cancella).
+router.patch('/me', requireAuth, async (req, res) => {
+  const user = req.user;
+  const shape = {
+    ...PROFILE_FIELDS.common,
+    ...(user.role === 'client' ? PROFILE_FIELDS.client : PROFILE_FIELDS.professional),
+  };
+  const data = parse(z.object(shape).partial(), req.body);
+  for (const key of Object.keys(shape)) {
+    if (key in (req.body ?? {})) user.set(key, data[key]);
+  }
+  await user.save();
+  res.json({ user });
+});
+
+const passwordSchema = z.object({
+  currentPassword: z.string({ error: 'Inserisci la password attuale.' }).min(1, 'Inserisci la password attuale.'),
+  newPassword: z
+    .string({ error: 'Inserisci la nuova password.' })
+    .min(8, 'La nuova password deve avere almeno 8 caratteri.')
+    .max(128, 'La password è troppo lunga.'),
+});
+
+router.put('/password', requireAuth, authLimiter, async (req, res) => {
+  const { currentPassword, newPassword } = parse(passwordSchema, req.body);
+  const user = await User.findById(req.user._id).select('+passwordHash');
+  if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+    throw new HttpError(400, 'La password attuale non è corretta.');
+  }
+  user.passwordHash = await bcrypt.hash(newPassword, 12);
+  await user.save();
+  res.status(204).end();
 });
 
 export default router;

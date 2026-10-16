@@ -3,13 +3,13 @@ import { ChartNoAxesColumn, Check, ChevronRight, Dumbbell, Target, Utensils } fr
 /** Cornice delle pagine di accesso: modulo a sinistra, vetrina illustrata a destra. */
 export function AuthShell({ children }) {
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-br from-[#f3faf7] via-[#e8f5f0] to-[#dcefe8] px-4 py-8 sm:py-12">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-white sm:bg-gradient-to-br sm:from-[#f3faf7] sm:via-[#e8f5f0] sm:to-[#dcefe8] sm:p-4 lg:p-6">
       {/* Onde decorative di sfondo */}
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-[#cfeadf]/60 blur-2xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-48 -left-40 h-[560px] w-[560px] rounded-full bg-[#bfe3d5]/50 blur-2xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute hidden sm:block -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-[#cfeadf]/60 blur-2xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute hidden sm:block -bottom-48 -left-40 h-[560px] w-[560px] rounded-full bg-[#bfe3d5]/50 blur-2xl" />
 
-      <div className="relative mx-auto grid max-w-[1140px] overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] lg:grid-cols-[1fr_1.05fr]">
-        <div className="px-6 py-10 sm:px-12 lg:px-14 lg:py-12">{children}</div>
+      <div className="relative grid w-full max-w-[1100px] overflow-hidden bg-white sm:rounded-[28px] sm:border sm:border-white/80 sm:shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] lg:grid-cols-[1fr_1.05fr]">
+        <div className="flex flex-col justify-center px-5 py-8 sm:px-12 sm:py-10 lg:px-14 short:py-5">{children}</div>
         <Showcase />
       </div>
     </div>
@@ -30,15 +30,15 @@ function Showcase() {
           WebkitMaskComposite: 'source-in',
         }}
       />
-      <div className="relative z-10 flex h-full flex-col px-10 pt-14 pb-10">
-        <h2 className="max-w-[270px] font-display text-[34px] leading-[1.12] font-semibold text-ink-900">
+      <div className="absolute inset-0 z-10 flex flex-col px-10 pt-12 pb-8 short:pt-8">
+        <h2 className="max-w-[270px] font-display text-[32px] leading-[1.12] font-semibold text-ink-900 short:text-[28px]">
           Un benessere più consapevole, ogni giorno.
         </h2>
-        <p className="mt-4 max-w-[250px] text-[15px] leading-relaxed text-ink-700">
+        <p className="mt-3 max-w-[250px] text-[15px] leading-relaxed text-ink-700 short:hidden">
           Nutrizione, allenamento e supporto professionale, tutto in un unico luogo per una versione più sana e felice di te.
         </p>
 
-        <div className="mt-10 space-y-4">
+        <div className="mt-8 space-y-4 short:mt-6">
           <div className="ml-6 -rotate-[1.5deg] rounded-2xl bg-white/95 p-4 shadow-float">
             <div className="flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-700"><ChartNoAxesColumn className="h-4 w-4" /></span>
@@ -109,7 +109,7 @@ function Showcase() {
           </div>
         </div>
 
-        <figure className="mt-auto pt-10 pl-6">
+        <figure className="mt-auto pt-6 pl-6 short:hidden">
           <blockquote className="font-serif text-[24px] leading-snug text-ink-900 italic">
             “Un te più sano
             <br />è un te più felice.”

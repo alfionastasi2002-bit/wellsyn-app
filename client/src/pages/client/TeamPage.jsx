@@ -1,6 +1,6 @@
-import { Check, Lock, LockOpen, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Check, Lock, LockOpen, MessageCircle, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
-import { useOutletContext } from 'react-router';
+import { Link, useOutletContext } from 'react-router';
 import { Avatar } from '../../components/Avatar.jsx';
 import { Card, EmptyState, ErrorState, PageLoader, Spinner } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
@@ -166,9 +166,14 @@ function ActiveCard({ item, onUpdate }) {
             </button>
           </span>
         ) : (
-          <button type="button" className="text-sm font-medium text-ink-500 hover:text-ink-900" onClick={() => setConfirming(true)}>
-            Interrompi collaborazione
-          </button>
+          <span className="flex flex-wrap items-center gap-3">
+            <Link to={`/app/notifiche?con=${item.professional.id}`} className="btn-outline">
+              <MessageCircle className="h-4 w-4" /> Scrivi
+            </Link>
+            <button type="button" className="text-sm font-medium text-ink-500 hover:text-ink-900" onClick={() => setConfirming(true)}>
+              Interrompi collaborazione
+            </button>
+          </span>
         )}
       </div>
     </Card>

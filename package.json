@@ -13,6 +13,7 @@
   },
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:online": "concurrently -n api,web -c yellow,green \"npm run dev:online -w server\" \"npm run dev -w client\"",
     "build": "npm run build -w client",
     "seed": "npm run seed -w server",
     "start": "npm run start -w server"

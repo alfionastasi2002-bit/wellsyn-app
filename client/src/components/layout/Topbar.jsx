@@ -1,16 +1,12 @@
-import { Bell, ChevronDown, LogOut, Menu, Search, Settings } from 'lucide-react';
+import { Bell, ChevronDown, LifeBuoy, LogOut, Menu, Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { displayName, ROLE_LABELS } from '../../lib/format.js';
 import { Avatar } from '../Avatar.jsx';
 import { LogoMark } from '../Logo.jsx';
-
-const SEARCH_PLACEHOLDER = {
-  client: 'Cerca ricette, allenamenti, articoli…',
-  nutritionist: 'Cerca clienti, piani alimentari, controlli…',
-  trainer: 'Cerca clienti, schede, sessioni, articoli…',
-};
+import { QuickSearch } from './QuickSearch.jsx';
+import { messagesPath } from '../../navigation.js';
 
 export function Topbar({ onOpenMenu, unread }) {
   const { user, logout } = useAuth();
@@ -30,8 +26,6 @@ export function Topbar({ onOpenMenu, unread }) {
     };
   }, [menuOpen]);
 
-  const messagesPath = user.role === 'client' ? '/app/notifiche' : '/app/messaggi';
-
   return (
     <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line/70 bg-canvas/90 px-4 py-3 backdrop-blur-md sm:px-6 lg:border-none lg:px-8 lg:pt-4 lg:pb-3">
       <button
@@ -46,21 +40,20 @@ export function Topbar({ onOpenMenu, unread }) {
         <LogoMark className="h-8 w-auto" />
       </Link>
 
-      <form role="search" className="hidden max-w-[520px] flex-1 md:block" onSubmit={(e) => e.preventDefault()}>
-        <label className="relative block">
-          <span className="sr-only">Cerca</span>
-          <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-ink-500" />
-          <input
-            type="search"
-            placeholder={SEARCH_PLACEHOLDER[user.role]}
-            className="h-11 w-full rounded-xl border border-transparent bg-[#eef3f1] pr-4 pl-12 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-300 focus:bg-white"
-          />
-        </label>
-      </form>
+      <QuickSearch role={user.role} />
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-4">
+      <div className="ml-auto flex items-center gap-1 sm:gap-3">
         <Link
-          to={messagesPath}
+          to="/app/supporto"
+          className="flex items-center gap-1.5 rounded-full p-2 text-ink-700 hover:bg-white xl:px-3"
+          aria-label="Centro assistenza"
+          title="Centro assistenza"
+        >
+          <LifeBuoy className="h-5 w-5" strokeWidth={1.8} />
+          <span className="hidden text-sm font-medium xl:inline">Assistenza</span>
+        </Link>
+        <Link
+          to={messagesPath(user.role)}
           className="relative rounded-full p-2 text-ink-700 hover:bg-white"
           aria-label={unread ? `Notifiche: ${unread} non lette` : 'Notifiche'}
         >
@@ -78,6 +71,7 @@ export function Topbar({ onOpenMenu, unread }) {
             className="flex items-center gap-3 rounded-full py-1 pr-2 pl-1 hover:bg-white"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
+            aria-label="Menu utente"
           >
             <Avatar user={user} size="lg" />
             <span className="hidden text-left sm:block">

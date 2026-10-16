@@ -3,10 +3,15 @@ import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { CareLink, CheckIn, User } from '../models/index.js';
+import { CareLink, CheckIn, MealPlan, User, WorkoutLog, WorkoutPlan } from '../models/index.js';
+import { requireClientOf } from '../services/access.js';
+import { adherence, weeklyConsistency } from '../services/stats.js';
+import { addDays, dayKey } from '../utils/dates.js';
 import { HttpError } from '../utils/httpError.js';
 import { publicUser } from '../utils/serialize.js';
 import { parse } from '../utils/validate.js';
+import { serializeCheckIn } from './checkins.routes.js';
+import { currentWeekOf } from './workoutPlans.routes.js';
 
 // Gestione dei clienti da parte di nutrizionisti e personal trainer.
 const router = Router();
@@ -53,6 +58,80 @@ router.get('/', async (req, res) => {
       client: { ...publicUser(l.client), email: l.client.email },
       lastCheck: lastByClient.get(String(l.client._id)) ?? null,
     })),
+  });
+});
+
+// Progressi di un cliente, filtrati in base a cosa può vedere questo professionista:
+// sempre i propri controlli e le pesate del cliente; i dati degli altri professionisti
+// (controlli o allenamenti) solo se il cliente ha autorizzato la condivisione.
+router.get('/:clientId/progress', async (req, res) => {
+  const me = req.user;
+  const link = await requireClientOf(me, req.params.clientId);
+  const clientId = link.client;
+  const shared = link.sharedAccess;
+  const today = dayKey();
+
+  const checkFilter = { client: clientId, $or: [{ professional: me._id }, { source: 'self' }] };
+  if (shared) checkFilter.$or.push({ source: { $in: ['nutritionist', 'trainer'] } });
+
+  const workoutVisible = me.role === 'trainer' || shared;
+  const [client, checkins, workoutPlan, logs, mealPlan] = await Promise.all([
+    User.findById(clientId).lean(),
+    CheckIn.find(checkFilter).sort({ date: 1 }).populate('professional').lean(),
+    workoutVisible
+      ? WorkoutPlan.findOne({ client: clientId, status: 'active', ...(me.role === 'trainer' && { trainer: me._id }) })
+          .sort({ updatedAt: -1 })
+          .lean()
+      : null,
+    workoutVisible ? WorkoutLog.find({ client: clientId, day: { $gte: addDays(today, -371) } }).sort({ day: -1 }).lean() : [],
+    me.role === 'nutritionist' || shared
+      ? MealPlan.findOne({ client: clientId, status: 'active', ...(me.role === 'nutritionist' && { nutritionist: me._id }) })
+          .sort({ updatedAt: -1 })
+          .lean()
+      : null,
+  ]);
+
+  const plannedDays = (workoutPlan?.sessions ?? []).map((s) => s.dayOfWeek).filter(Boolean);
+  const from28 = addDays(today, -27);
+
+  res.json({
+    client: {
+      ...publicUser(client),
+      email: client.email,
+      goal: client.goal ?? null,
+      heightCm: client.heightCm ?? null,
+      startWeightKg: client.startWeightKg ?? null,
+    },
+    link: { id: String(link._id), program: link.program ?? null, sharedAccess: shared, since: link.createdAt },
+    checkins: checkins.map(serializeCheckIn),
+    workout: workoutVisible
+      ? {
+          plan: workoutPlan && {
+            id: String(workoutPlan._id),
+            title: workoutPlan.title,
+            level: workoutPlan.level,
+            weeks: workoutPlan.weeks,
+            currentWeek: currentWeekOf(workoutPlan, today),
+            sessions: workoutPlan.sessions.map((s) => ({ name: s.name, dayOfWeek: s.dayOfWeek ?? null })),
+          },
+          consistency: weeklyConsistency([{ logs, plannedDays }], { today, weeks: 52 }),
+          last28: adherence(logs, plannedDays, from28, today),
+          days: Array.from({ length: 28 }, (_, i) => {
+            const day = addDays(from28, i);
+            return { day, on: logs.some((l) => l.day === day && l.completed) };
+          }),
+          history: logs
+            .filter((l) => l.completed)
+            .slice(0, 20)
+            .map((l) => ({ day: l.day, sessionName: l.sessionName ?? null })),
+        }
+      : null,
+    mealPlan: mealPlan && {
+      id: String(mealPlan._id),
+      title: mealPlan.title,
+      kcalTarget: mealPlan.kcalTarget ?? null,
+      goal: mealPlan.goal ?? null,
+    },
   });
 });
 

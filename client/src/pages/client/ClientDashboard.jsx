@@ -1,17 +1,13 @@
 import {
+  CalendarCheck,
   CalendarDays,
   ChartNoAxesColumn,
   Check,
   ChevronRight,
   CircleCheck,
   Clock,
-  Coffee,
   Dumbbell,
   MessageCircle,
-  Moon,
-  Quote,
-  Salad,
-  Scale,
   SignalMedium,
   Target,
   Utensils,
@@ -37,18 +33,9 @@ import {
   Spinner,
 } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
-import { capitalize, DAY_NAMES, displayName, fmtDate, fmtNumber, ROLE_LABELS } from '../../lib/format.js';
+import { capitalize, DAY_NAMES, displayName, fmtDate, fmtDayKey, fmtNumber, ROLE_LABELS, todayKey } from '../../lib/format.js';
+import { LEVEL_LABELS, MEAL_META } from '../../lib/labels.js';
 import { useApi } from '../../lib/useApi.js';
-
-const MEAL_META = {
-  colazione: { label: 'Colazione', icon: Coffee },
-  spuntino: { label: 'Spuntino', icon: Salad },
-  pranzo: { label: 'Pranzo', icon: Utensils },
-  merenda: { label: 'Merenda', icon: Salad },
-  cena: { label: 'Cena', icon: Moon },
-};
-
-const LEVEL_LABELS = { principiante: 'Livello principiante', intermedio: 'Livello intermedio', avanzato: 'Livello avanzato' };
 
 export default function ClientDashboard() {
   const { data, error, loading, reload, setData } = useApi('/dashboard/client');
@@ -82,53 +69,34 @@ export default function ClientDashboard() {
                 )}
               </div>
             </div>
-            <div className="xl:border-t xl:border-brand-200/70 xl:pt-5">
-              <p className="eyebrow">Obiettivo principale</p>
+            <Link to="/app/controlli" className="group block xl:border-t xl:border-brand-200/70 xl:pt-5">
+              <p className="eyebrow">Prossimo controllo</p>
               <div className="mt-3 flex items-center gap-3">
-                <IconBadge icon={Target} size="lg" tone="brand" />
-                <p className="font-semibold text-ink-900">{data.user.goal ?? 'Imposta il tuo obiettivo con il tuo professionista'}</p>
+                <IconBadge icon={CalendarDays} size="lg" tone="brand" />
+                {data.nextCheck ? (
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-ink-900">{fmtDate(data.nextCheck.date)}</span>
+                    <span className="block text-sm text-ink-700">{data.nextCheck.type}</span>
+                  </span>
+                ) : (
+                  <span className="flex-1 text-sm text-ink-700">Nessun controllo in programma</span>
+                )}
+                <ChevronRight className="h-5 w-5 shrink-0 text-ink-400 transition group-hover:translate-x-0.5" />
               </div>
-            </div>
+            </Link>
           </div>
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
         <TodayWorkout workout={workout} onChange={(completedToday) => setData((d) => updateWorkout(d, completedToday))} />
         <TodayMeals meals={meals} onToggle={(type, done) => setData((d) => updateMeal(d, type, done))} />
-        <QuoteCard />
+        <WeekCard workout={workout} />
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <WeightCard trend={weight.trend} />
         <ConsistencyCard rows={data.consistency} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <MiniStat icon={Scale} label="Peso attuale">
-          <span className="font-display text-2xl font-semibold">{fmtNumber(weight.current)} kg</span>
-          {weight.delta != null && (
-            <span className="text-xs">
-              <Delta value={weight.delta} suffix=" kg" goodWhen="any" /> <span className="text-ink-500">dall'inizio</span>
-            </span>
-          )}
-        </MiniStat>
-        <MiniStat icon={Dumbbell} label="Allenamenti questa settimana">
-          <span className="font-display text-2xl font-semibold">
-            {workout ? `${workout.week.completed} / ${workout.week.planned}` : '—'}
-          </span>
-          {workout && <ProgressBar value={workout.week.completed} max={workout.week.planned} className="w-full max-w-[180px]" />}
-        </MiniStat>
-        <MiniStat icon={CalendarDays} label="Prossimo controllo" to="/app/controlli">
-          {data.nextCheck ? (
-            <span>
-              <span className="block font-display text-xl font-semibold">{fmtDate(data.nextCheck.date)}</span>
-              <span className="block text-sm text-ink-700">{data.nextCheck.type}</span>
-            </span>
-          ) : (
-            <span className="text-sm text-ink-500">Nessun controllo in programma</span>
-          )}
-        </MiniStat>
       </div>
 
       <Professionals professionals={data.professionals} pending={data.pendingRequests} />
@@ -138,8 +106,17 @@ export default function ClientDashboard() {
 
 function updateWorkout(data, completedToday) {
   const w = data.workout;
+  const today = todayKey();
   const delta = completedToday === w.completedToday ? 0 : completedToday ? 1 : -1;
-  return { ...data, workout: { ...w, completedToday, week: { ...w.week, completed: w.week.completed + delta } } };
+  return {
+    ...data,
+    workout: {
+      ...w,
+      completedToday,
+      week: { ...w.week, completed: Math.max(0, w.week.completed + delta) },
+      days: w.days.map((d) => (d.day === today ? { ...d, completed: completedToday } : d)),
+    },
+  };
 }
 
 function updateMeal(data, type, done) {
@@ -297,24 +274,52 @@ function TodayMeals({ meals, onToggle }) {
   );
 }
 
-function QuoteCard() {
+function WeekCard({ workout }) {
+  const today = todayKey();
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf6f1] to-[#d6eee5] p-6 lg:col-span-2 xl:col-span-1">
-      <Quote className="h-9 w-9 fill-brand-600 text-brand-600" />
-      <p className="relative z-10 mt-3 max-w-[260px] font-serif text-[26px] leading-snug text-ink-900 italic">
-        Una versione più sana di te è una versione più felice di te.
-      </p>
-      <p className="relative z-10 mt-4 max-w-[190px] text-sm text-ink-700">
-        Il progresso non è la perfezione, ma la costanza nel tempo.
-      </p>
-      <div className="relative z-10 mt-4 h-px w-8 bg-ink-700" />
-      <p className="relative z-10 mt-2 max-w-[150px] text-xs text-ink-700">Il tuo benessere. Sempre con te.</p>
-      <img
-        src="/brand/logo-mark.png"
-        alt=""
-        className="pointer-events-none absolute -right-12 -bottom-10 h-32 w-auto opacity-70"
-      />
-    </section>
+    <Card className="p-5 lg:col-span-2 xl:col-span-1">
+      <CardHeader icon={CalendarCheck} title="Allenamenti questa settimana" action={<ArrowLink to="/app/allenamenti">Vedi tutti</ArrowLink>} />
+      {!workout ? (
+        <EmptyState title="Nessuna scheda attiva" text="Qui vedrai gli allenamenti della settimana." />
+      ) : (
+        <>
+          <div className="mt-4 flex items-end justify-between gap-4">
+            <p>
+              <span className="font-display text-[32px] leading-none font-semibold">
+                {workout.week.completed} / {workout.week.planned}
+              </span>
+              <span className="ml-2 text-sm text-ink-500">completati</span>
+            </p>
+          </div>
+          <ProgressBar value={workout.week.completed} max={workout.week.planned} className="mt-3" />
+          <ul className="mt-4 space-y-1">
+            {workout.days.map((d) => (
+              <WeekDayRow key={d.day} day={d} today={today} />
+            ))}
+          </ul>
+        </>
+      )}
+    </Card>
+  );
+}
+
+function WeekDayRow({ day, today }) {
+  const isToday = day.day === today;
+  const isPast = day.day < today;
+  let status;
+  if (day.completed) status = <CircleCheck className="h-5 w-5 fill-brand-500 text-white" aria-label="Svolto" />;
+  else if (!day.session) status = <span className="text-xs text-ink-400">Riposo</span>;
+  else if (isPast) status = <span className="text-xs font-medium text-amber-600">Saltato</span>;
+  else status = <span className={`h-5 w-5 rounded-full border-2 ${isToday ? 'border-brand-500' : 'border-ink-300'}`} aria-label="Da fare" />;
+
+  return (
+    <li className={`flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm ${isToday ? 'bg-brand-50' : ''}`}>
+      <span className={`w-16 shrink-0 ${isToday ? 'font-semibold text-brand-800' : 'text-ink-500'}`}>
+        {isToday ? 'Oggi' : capitalize(fmtDayKey(day.day, { weekday: 'short', day: 'numeric' }).replace('.', ''))}
+      </span>
+      <span className={`min-w-0 flex-1 truncate ${day.session ? 'text-ink-900' : 'text-ink-400'}`}>{day.session ?? '—'}</span>
+      {status}
+    </li>
   );
 }
 
@@ -352,26 +357,6 @@ function ConsistencyCard({ rows }) {
   );
 }
 
-function MiniStat({ icon, label, to, children }) {
-  const content = (
-    <>
-      <IconBadge icon={icon} size="lg" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-ink-700">{label}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">{children}</div>
-      </div>
-      {to && <ChevronRight className="h-5 w-5 shrink-0 text-ink-400" />}
-    </>
-  );
-  return to ? (
-    <Link to={to} className="card flex items-center gap-4 p-5 hover:border-brand-200">
-      {content}
-    </Link>
-  ) : (
-    <div className="card flex items-center gap-4 p-5">{content}</div>
-  );
-}
-
 function Professionals({ professionals, pending }) {
   return (
     <Card className="p-5">
@@ -395,7 +380,7 @@ function Professionals({ professionals, pending }) {
                 {professional.bio && <p className="mt-1.5 text-[13px] text-ink-500">{capitalize(professional.bio)}</p>}
               </div>
               <div className="flex gap-2 sm:flex-col">
-                <Link to="/app/notifiche" className="btn-outline flex-1">
+                <Link to={`/app/notifiche?con=${professional.id}`} className="btn-outline flex-1">
                   <MessageCircle className="h-4 w-4" /> Messaggia
                 </Link>
                 <Link to="/app/professionisti" className="btn-soft flex-1">

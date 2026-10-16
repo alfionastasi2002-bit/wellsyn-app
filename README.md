@@ -44,13 +44,14 @@ Da eseguire nella cartella del progetto:
 
 ```bash
 npm install          # installa le librerie (solo la prima volta o dopo un aggiornamento)
-npm run dev          # avvia sito (http://localhost:5173) e API (porta 5000)
+npm run dev          # sito (http://localhost:5173) + API con database di PROVA (dati demo, si azzera)
+npm run dev:online   # come sopra ma sul database ONLINE di .env: le modifiche si vedono sul sito
 npm run build        # crea la versione di produzione del sito
 npm run seed         # carica i dati demo sul database di .env (solo se è vuoto)
 ```
 
-Se nel file `.env` la variabile `MONGODB_URI` è vuota, `npm run dev` avvia un database temporaneo
-in memoria già pieno di dati demo (si azzera a ogni riavvio).
+`npm run dev` non tocca mai i dati online: è il modo sicuro per provare le modifiche.
+Usa `npm run dev:online` solo quando vuoi lavorare consapevolmente sui dati reali.
 
 ## Account demo
 
@@ -76,13 +77,27 @@ Altri clienti demo: `marco.bianchi@`, `martina.conti@`, `andrea.greco@`, `sara.c
 | GET | `/api/dashboard/client` · `/nutritionist` · `/trainer` | ruolo corrispondente | dati delle dashboard |
 | PUT | `/api/me/workouts/today` · `/api/me/meals/today` | cliente | segna allenamento / pasti di oggi |
 | GET/POST/DELETE | `/api/clients` | professionisti | elenco, aggiunta e rimozione clienti |
+| GET | `/api/clients/:id/progress` | professionisti | misure e allenamenti visibili (in base al consenso) |
 | GET/PATCH | `/api/team` | cliente | accetta professionisti e gestisce la condivisione |
+| GET/POST/PUT/PATCH/DELETE | `/api/meal-plans` | nutrizionista | piani alimentari |
+| GET/POST/PUT/PATCH/DELETE | `/api/workout-plans` | personal trainer | schede di allenamento |
+| GET/POST/DELETE | `/api/checkins` | professionisti | controlli e misurazioni |
+| GET/POST/PATCH | `/api/appointments` | tutti (crea solo il professionista) | agenda di controlli e sessioni |
+| GET/POST | `/api/messages` | tutti | conversazioni tra cliente, professionisti e colleghi |
+| GET/POST/DELETE | `/api/me/meal-plan` · `/workout-plan` · `/checkins` | cliente | le sue pagine e le pesate |
+| PATCH · PUT | `/api/auth/me` · `/api/auth/password` | autenticati | profilo e cambio password |
 
 ## Stato del progetto
 
-**Pronto:** login e registrazione con ruoli, dashboard di Cliente / Nutrizionista / Personal Trainer
-con dati reali, gestione clienti, richieste di collegamento e consenso alla condivisione, layout responsive.
+**Pronto:**
+- login e registrazione con ruoli, dashboard di Cliente / Nutrizionista / Personal Trainer;
+- cliente: alimentazione giorno per giorno, allenamenti e scheda, progressi con pesate, controlli, messaggi;
+- nutrizionista: editor dei piani alimentari, agenda e misurazioni, progressi dei clienti, attività fisica condivisa;
+- personal trainer: editor delle schede, agenda delle sessioni, progressi, check nutrizionali condivisi;
+- gestione clienti, richieste di collegamento e consenso alla condivisione;
+- messaggi (aggiornati ogni pochi secondi), impostazioni del profilo e password, centro assistenza, ricerca rapida;
+- layout responsive per computer, tablet e smartphone.
 
-**Prossimi passi:** editor dei piani alimentari e delle schede, registrazione dei controlli,
-agenda appuntamenti, messaggistica, pagina profilo/impostazioni, recupero password via email,
-informativa privacy e consensi GDPR (i dati sanitari sono "categorie particolari").
+**Prossimi passi possibili:** recupero password via email, notifiche email/push, foto profilo,
+esportazione PDF di piani e schede, informativa privacy e consensi GDPR
+(i dati sanitari sono "categorie particolari").

@@ -1,5 +1,6 @@
-import { Copy, Lock, LockOpen, Mail, Plus, Target, UserPlus, UserRound, Users, X } from 'lucide-react';
+import { ChartNoAxesColumn, Copy, Lock, LockOpen, Mail, MessageCircle, Plus, Target, UserPlus, UserRound, Users, X } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Avatar } from '../../components/Avatar.jsx';
 import { Card, CardHeader, EmptyState, ErrorState, PageLoader, Spinner } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
@@ -79,7 +80,13 @@ function ClientRow({ item, onRemoved }) {
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar user={client} size="lg" />
         <div className="min-w-0">
-          <p className="font-semibold">{client.fullName}</p>
+          {item.status === 'active' ? (
+            <Link to={`/app/progressi?cliente=${client.id}`} className="font-semibold hover:underline">
+              {client.fullName}
+            </Link>
+          ) : (
+            <p className="font-semibold">{client.fullName}</p>
+          )}
           <p className="truncate text-sm text-ink-500">{client.email}</p>
         </div>
       </div>
@@ -103,7 +110,17 @@ function ClientRow({ item, onRemoved }) {
           </span>
         )}
       </div>
-      <div className="flex shrink-0 gap-2">
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {item.status === 'active' && !confirming && (
+          <>
+            <Link to={`/app/progressi?cliente=${client.id}`} className="btn-outline">
+              <ChartNoAxesColumn className="h-4 w-4" /> Progressi
+            </Link>
+            <Link to={`/app/messaggi?con=${client.id}`} className="btn-soft px-3" aria-label={`Scrivi a ${client.firstName}`} title="Scrivi">
+              <MessageCircle className="h-4 w-4" />
+            </Link>
+          </>
+        )}
         {confirming ? (
           <>
             <button type="button" className="btn-soft" onClick={() => setConfirming(false)}>Annulla</button>

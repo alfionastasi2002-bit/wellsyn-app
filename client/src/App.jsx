@@ -3,33 +3,46 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from '
 import { AppLayout } from './components/layout/AppLayout.jsx';
 import { PageLoader } from './components/ui.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-import { COMING_SOON, NAVIGATION } from './navigation.js';
-import ComingSoon from './pages/ComingSoon.jsx';
+import { NAVIGATION } from './navigation.js';
 import NotFound from './pages/NotFound.jsx';
 
 // Le pagine vengono caricate solo quando servono (il login resta leggero).
 const LoginPage = lazy(() => import('./pages/auth/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage.jsx'));
-const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard.jsx'));
-const NutritionistDashboard = lazy(() => import('./pages/nutritionist/NutritionistDashboard.jsx'));
-const TrainerDashboard = lazy(() => import('./pages/trainer/TrainerDashboard.jsx'));
-const TeamPage = lazy(() => import('./pages/client/TeamPage.jsx'));
-const ClientsPage = lazy(() => import('./pages/pro/ClientsPage.jsx'));
 
 const DASHBOARDS = {
-  client: ClientDashboard,
-  nutritionist: NutritionistDashboard,
-  trainer: TrainerDashboard,
+  client: lazy(() => import('./pages/client/ClientDashboard.jsx')),
+  nutritionist: lazy(() => import('./pages/nutritionist/NutritionistDashboard.jsx')),
+  trainer: lazy(() => import('./pages/trainer/TrainerDashboard.jsx')),
 };
 
-const PAGES = { team: TeamPage, clients: ClientsPage };
+const PAGES = {
+  // Cliente
+  clientNutrition: lazy(() => import('./pages/client/NutritionPage.jsx')),
+  clientWorkouts: lazy(() => import('./pages/client/WorkoutsPage.jsx')),
+  clientProgress: lazy(() => import('./pages/client/ProgressPage.jsx')),
+  clientChecks: lazy(() => import('./pages/client/ChecksPage.jsx')),
+  team: lazy(() => import('./pages/client/TeamPage.jsx')),
+  // Professionisti
+  clients: lazy(() => import('./pages/pro/ClientsPage.jsx')),
+  agenda: lazy(() => import('./pages/pro/AgendaPage.jsx')),
+  proProgress: lazy(() => import('./pages/pro/ClientProgressPage.jsx')),
+  mealPlans: lazy(() => import('./pages/nutritionist/MealPlansPage.jsx')),
+  sharedActivity: lazy(() => import('./pages/nutritionist/SharedActivityPage.jsx')),
+  workoutPlans: lazy(() => import('./pages/trainer/WorkoutPlansPage.jsx')),
+  sharedNutrition: lazy(() => import('./pages/trainer/SharedNutritionPage.jsx')),
+  // Tutti
+  messages: lazy(() => import('./pages/shared/MessagesPage.jsx')),
+  settings: lazy(() => import('./pages/shared/SettingsPage.jsx')),
+  support: lazy(() => import('./pages/shared/SupportPage.jsx')),
+};
 
 /** Solo per utenti autenticati: altrimenti rimanda al login. */
 function RequireAuth({ children }) {
   const { user } = useAuth();
   const location = useLocation();
   if (user === undefined) return <PageLoader label="Verifica dell'accesso…" />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   return children;
 }
 
@@ -49,14 +62,12 @@ function Dashboard() {
 
 function Section() {
   const { user } = useAuth();
-  const { section } = useParams();
+  const { section, itemId } = useParams();
   const item = NAVIGATION[user.role].find((i) => i.path === section);
-  const Page = item?.page && PAGES[item.page];
-  if (Page) return <Page />;
-  if (item || COMING_SOON[section]) {
-    return <ComingSoon title={item?.label ?? 'Centro assistenza'} description={COMING_SOON[section]} icon={item?.icon} />;
-  }
-  return <ComingSoon title="Sezione non disponibile" description="Questa sezione non esiste per il tuo profilo." />;
+  const Page = section === 'supporto' ? PAGES.support : item && PAGES[item.page];
+  if (!Page) return <NotFound inApp />;
+  // key: cambiando elemento (es. da un piano all'altro) la pagina riparte pulita
+  return <Page key={itemId ?? 'list'} itemId={itemId} />;
 }
 
 export default function App() {
@@ -78,6 +89,7 @@ export default function App() {
             >
               <Route index element={<Dashboard />} />
               <Route path=":section" element={<Section />} />
+              <Route path=":section/:itemId" element={<Section />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

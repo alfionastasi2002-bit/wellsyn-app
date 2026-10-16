@@ -1,12 +1,16 @@
 // Avvio del server in locale (sul tuo PC). Su Vercel si usa invece api/index.js.
+//   npm run dev         -> database di PROVA in memoria con dati demo (sicuro: non tocca i dati online)
+//   npm run dev:online  -> database ONLINE indicato in MONGODB_URI (le modifiche si vedono sul sito)
 import app from './app.js';
 import { connectDB, describeDbError } from './config/db.js';
 import { env } from './config/env.js';
 
+const useOnlineDatabase = process.argv.includes('--online');
+
 async function startInMemoryDatabase() {
-  console.warn(
-    '\n⚠  MONGODB_URI non impostata nel file .env: avvio un database temporaneo con dati demo.\n' +
-      '   Tutto ciò che salvi verrà perso alla chiusura. Collega MongoDB Atlas per conservare i dati.\n',
+  console.log(
+    '\nℹ  Database di PROVA sul tuo PC con dati demo: si azzera a ogni riavvio e non tocca i dati online.\n' +
+      '   Per lavorare sul database online usa:  npm run dev:online\n',
   );
   const { MongoMemoryServer } = await import('mongodb-memory-server-core');
   const memoryServer = await MongoMemoryServer.create();
@@ -16,9 +20,10 @@ async function startInMemoryDatabase() {
 }
 
 async function start() {
-  if (env.mongoUri) {
+  if (useOnlineDatabase) {
+    if (!env.mongoUri) throw new Error('MONGODB_URI non configurata nel file .env.');
     await connectDB();
-    console.log('✓ Collegato a MongoDB');
+    console.warn('\n⚠  Collegato al database ONLINE: ogni modifica è visibile anche sul sito pubblicato.\n');
   } else {
     await startInMemoryDatabase();
   }

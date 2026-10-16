@@ -1,4 +1,5 @@
 import { MessageSquareText } from 'lucide-react';
+import { Link } from 'react-router';
 import { relativeTime, displayName } from '../lib/format.js';
 import { Avatar } from './Avatar.jsx';
 import { ArrowLink, Card, CardHeader, EmptyState } from './ui.jsx';
@@ -12,7 +13,8 @@ export function MessageList({ messages, to = '/app/messaggi', className = '' }) 
       ) : (
         <ul className="mt-3 divide-y divide-line">
           {messages.map((m) => (
-            <li key={m.id} className="flex items-start gap-3 py-3">
+            <li key={m.id}>
+              <Link to={`${to}?con=${m.from.id}`} className="flex items-start gap-3 rounded-lg py-3 transition hover:bg-[#f7faf9]">
               <Avatar user={m.from} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
@@ -22,6 +24,7 @@ export function MessageList({ messages, to = '/app/messaggi', className = '' }) 
                 <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-500">{m.text}</p>
               </div>
               {m.unread && <span className="mt-6 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500" aria-label="Non letto" />}
+              </Link>
             </li>
           ))}
         </ul>

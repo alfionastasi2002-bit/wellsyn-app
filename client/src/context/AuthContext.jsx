@@ -34,7 +34,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, login, register, logout }), [user, login, register, logout]);
+  // Dopo una modifica del profilo aggiorniamo i dati mostrati in tutta l'app.
+  const updateUser = useCallback((nextUser) => setUser(nextUser), []);
+
+  const value = useMemo(() => ({ user, login, register, logout, updateUser }), [user, login, register, logout, updateUser]);
   return <AuthContext value={value}>{children}</AuthContext>;
 }
 

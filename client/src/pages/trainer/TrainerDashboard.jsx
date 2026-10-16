@@ -73,11 +73,6 @@ export default function TrainerDashboard() {
                 title={`${today.completedToday} allenamenti completati`}
                 sub={`${completedDiff >= 0 ? '+' : ''}${completedDiff} rispetto a ieri`}
               />
-              <OverviewRow
-                icon={Users}
-                title={`${today.activeClients} clienti attivi`}
-                sub={`${today.newClientsThisMonth} nuove iscrizioni questo mese`}
-              />
             </ul>
           </div>
         }
@@ -146,7 +141,7 @@ function RecentClients({ clients }) {
       {clients.length === 0 ? (
         <EmptyState title="Nessun cliente" text="Aggiungi il tuo primo cliente dalla sezione Clienti." />
       ) : (
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 relative overflow-x-auto">
           <table className="w-full min-w-[460px] text-sm">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
@@ -203,7 +198,7 @@ function FeaturedPlan({ plan }) {
             </span>
           </div>
           {plan.session && (
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 relative overflow-x-auto">
               <table className="w-full min-w-[360px] text-[13px]">
                 <thead>
                   <tr className="text-left text-[10px] tracking-wider text-ink-500 uppercase">
@@ -227,7 +222,7 @@ function FeaturedPlan({ plan }) {
             </div>
           )}
           <div className="mt-auto pt-4">
-            <Link to="/app/schede" className="btn-primary w-full">
+            <Link to={`/app/schede/${plan.id}`} className="btn-primary w-full">
               Aggiorna scheda <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
