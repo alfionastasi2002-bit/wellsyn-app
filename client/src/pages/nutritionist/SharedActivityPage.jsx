@@ -44,6 +44,7 @@ export default function SharedActivityPage() {
             clients={choice.clients}
             onOpen={choice.setClientId}
             isLocked={(c) => !c.sharedAccess}
+            rank={(c) => (c.workout?.planTitle ? 0 : c.workout?.lastWorkout ? 1 : 2)}
             details={(c) => <ActivitySummary item={c} />}
           />
           {lockedCount > 0 && (

@@ -597,6 +597,22 @@ export const EN = {
   'Copia credenziali': 'Copy credentials',
   'Questa password viene mostrata una sola volta: annotala e consegnala al cliente.': 'This password is shown only once: write it down and give it to the client.',
 
+  // Elenchi con tanti clienti
+  'Condivisione attiva': 'Sharing on',
+  'Senza condivisione': 'No sharing',
+  'In attesa': 'Pending',
+  'Ordina per': 'Sort by',
+  'Nome (A–Z)': 'Name (A–Z)',
+  'Aggiunti di recente': 'Recently added',
+  'Controllo meno recente': 'Oldest check-up first',
+  'Cerca per nome, email o percorso…': 'Search by name, email or program…',
+  '{shown} di {total} clienti': '{shown} of {total} clients',
+  'Nessun controllo ancora': 'No check-ups yet',
+  'Cerca una conversazione': 'Search conversations',
+  'Cerca un contatto…': 'Search contacts…',
+  'Nessun contatto trovato.': 'No contacts found.',
+  'Cerca per cliente o titolo…': 'Search by client or title…',
+
   // Messaggi
   Collega: 'Colleague',
   'Notifiche e messaggi': 'Notifications & messages',

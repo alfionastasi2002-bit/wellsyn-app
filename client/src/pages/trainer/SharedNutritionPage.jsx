@@ -45,6 +45,7 @@ export default function SharedNutritionPage() {
             clients={choice.clients}
             onOpen={choice.setClientId}
             isLocked={(c) => !c.sharedAccess}
+            rank={(c) => (c.nutrition ? 0 : 1)}
             details={(c) => (
               <>
                 <StatLine label={t('Check nutrizionali')}>{c.nutrition?.count ?? 0}</StatLine>

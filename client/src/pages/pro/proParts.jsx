@@ -30,14 +30,16 @@ export function useClientChoice() {
 
 /**
  * Elenco dei clienti a schede, al centro della pagina: si cerca per nome e si apre il dettaglio con un clic.
+ * rank(item): priorità nell'ordine (i numeri più bassi vengono prima, a parità in ordine alfabetico).
  * isLocked(item) -> cliente non apribile (es. non ha autorizzato la condivisione); details(item) -> righe di riepilogo.
  */
-export function ClientGrid({ clients, onOpen, isLocked = () => false, details, lockedText }) {
+export function ClientGrid({ clients, onOpen, isLocked = () => false, details, lockedText, rank = () => 0 }) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const visible = clients.filter((c) => !q || c.client.fullName.toLowerCase().includes(q) || (c.program ?? '').toLowerCase().includes(q));
-  const open = visible.filter((c) => !isLocked(c));
-  const locked = visible.filter((c) => isLocked(c));
+  const byRank = (a, b) => rank(a) - rank(b) || a.client.fullName.localeCompare(b.client.fullName);
+  const open = visible.filter((c) => !isLocked(c)).sort(byRank);
+  const locked = visible.filter((c) => isLocked(c)).sort(byRank);
 
   return (
     <div className="space-y-4">

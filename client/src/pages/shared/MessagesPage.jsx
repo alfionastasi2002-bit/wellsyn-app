@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, MessageSquareText, SendHorizontal, UserRound } from 'lucide-react';
+import { ArrowLeft, Bell, MessageSquareText, Search, SendHorizontal, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router';
 import { Avatar } from '../../components/Avatar.jsx';
@@ -20,6 +20,7 @@ export default function MessagesPage() {
   const contacts = useApi('/messages/contacts');
   const summary = useApi(user.role === 'client' ? '/me/summary' : null);
   const selectedId = params.get('con');
+  const [search, setSearch] = useState('');
   const { reload } = contacts;
 
   // Aggiorna l'elenco ogni 20 secondi per vedere i nuovi messaggi.
@@ -31,8 +32,11 @@ export default function MessagesPage() {
   if (contacts.loading && !contacts.data) return <PageLoader />;
   if (contacts.error) return <ErrorState error={contacts.error} onRetry={reload} />;
 
-  const list = contacts.data.contacts;
-  const selected = list.find((c) => c.user.id === selectedId);
+  const all = contacts.data.contacts;
+  const contactsCount = all.length;
+  const q = search.trim().toLowerCase();
+  const list = q ? all.filter((c) => displayName(c.user).toLowerCase().includes(q)) : all;
+  const selected = all.find((c) => c.user.id === selectedId);
   const select = (id) => setParams(id ? { con: id } : {});
   const pending = summary.data?.pendingRequests ?? 0;
 
@@ -61,8 +65,22 @@ export default function MessagesPage() {
 
       <div className="card grid h-[calc(100dvh-230px)] min-h-[460px] grid-cols-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className={`min-h-0 flex-col border-line lg:flex lg:border-r ${selected ? 'hidden' : 'flex'}`}>
-          <p className="border-b border-line px-4 py-3 text-sm font-semibold">{t('Conversazioni')}</p>
-          {list.length === 0 ? (
+          <div className="border-b border-line px-4 py-3">
+            <p className="text-sm font-semibold">{t('Conversazioni')}</p>
+            {contactsCount > 8 && (
+              <label className="relative mt-2 block">
+                <span className="sr-only">{t('Cerca una conversazione')}</span>
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t('Cerca un contatto…')}
+                  className="w-full rounded-lg border border-line bg-surface py-2 pr-3 pl-9 text-sm outline-none focus:border-brand-500"
+                />
+              </label>
+            )}
+          </div>
+          {contactsCount === 0 ? (
             <EmptyState
               icon={UserRound}
               title={t('Nessun contatto')}
@@ -70,6 +88,7 @@ export default function MessagesPage() {
             />
           ) : (
             <ul className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+              {list.length === 0 && <li className="px-4 py-6 text-center text-sm text-ink-500">{t('Nessun contatto trovato.')}</li>}
               {list.map((c) => (
                 <li key={c.user.id}>
                   <button

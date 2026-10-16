@@ -76,7 +76,9 @@ export function SelectInput({ label, hint, className, children, ...props }) {
 /** Elenco dei clienti attivi del professionista. onlyShared: solo chi ha autorizzato la condivisione. */
 export function ClientSelect({ value, onChange, label = t('Cliente'), onlyShared = false, placeholder = t('Seleziona un cliente'), disabled, className }) {
   const { data, loading } = useApi('/clients');
-  const clients = (data?.clients ?? []).filter((c) => c.status === 'active' && (!onlyShared || c.sharedAccess));
+  const clients = (data?.clients ?? [])
+    .filter((c) => c.status === 'active' && (!onlyShared || c.sharedAccess))
+    .sort((a, b) => a.client.fullName.localeCompare(b.client.fullName));
   return (
     <SelectInput label={label} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled || loading} className={className}>
       <option value="">{loading ? t('Caricamento…') : placeholder}</option>

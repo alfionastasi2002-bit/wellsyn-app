@@ -16,7 +16,8 @@ async function startInMemoryDatabase() {
   const memoryServer = await MongoMemoryServer.create();
   await connectDB(memoryServer.getUri('wellsyn'));
   const { seedDemoData } = await import('./seed/demo.js');
-  await seedDemoData();
+  // In locale aggiungiamo tanti clienti demo per vedere l'app con un lavoro "pieno".
+  await seedDemoData({ extraClients: 30 });
 }
 
 async function start() {

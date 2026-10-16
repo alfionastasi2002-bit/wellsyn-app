@@ -77,11 +77,13 @@ export function fmtDuration(min) {
 
 const dayDiff = (fromKey, toKey) => Math.round((new Date(toKey) - new Date(fromKey)) / 86400000);
 
-/** "Oggi", "Ieri", "3 giorni fa"... */
+/** "Oggi", "Ieri", "3 giorni fa", "Domani"... */
 export function relativeDay(key) {
   if (!key) return '—';
   const diff = dayDiff(key, todayKey());
-  if (diff <= 0) return t('Oggi');
+  if (diff === 0) return t('Oggi');
+  if (diff === -1) return t('Domani');
+  if (diff < 0) return capitalize(fmtDayKey(key, { weekday: 'short', day: 'numeric', month: 'short' }));
   if (diff === 1) return t('Ieri');
   if (diff < 7) return t('{n} giorni fa', { n: diff });
   return fmtDayKey(key);

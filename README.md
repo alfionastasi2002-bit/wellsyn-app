@@ -65,6 +65,10 @@ Disponibili con i dati demo (database temporaneo o dopo `npm run seed`). Passwor
 
 Altri clienti demo: `marco.bianchi@`, `martina.conti@`, `andrea.greco@`, `sara.conti@`, `davide.esposito@`,
 `elena.romano@`, `chiara.moretti@` (tutti `…wellsyn.demo`).
+
+Con `npm run dev` (database di prova sul tuo PC) vengono creati anche **30 clienti demo in più**,
+con controlli, piani, schede, allenamenti e appuntamenti, per vedere l'app con tanti clienti
+(es. `alessandro.costa@wellsyn.demo`, stessa password). Il comando `npm run seed` per il database online non li aggiunge.
 **Nota:** prima di usare l'app con clienti veri, cancella i dati demo dal database di produzione.
 
 ## API principali

@@ -1,4 +1,4 @@
-import { CalendarPlus, ChartNoAxesColumn, Copy, Lock, LockOpen, Mail, MessageCircle, Plus, Target, UserPlus, UserRound, Users, X } from 'lucide-react';
+import { CalendarPlus, ChartNoAxesColumn, Copy, Lock, LockOpen, Mail, MessageCircle, Plus, Search, Target, UserPlus, UserRound, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Avatar } from '../../components/Avatar.jsx';
@@ -51,14 +51,87 @@ export default function ClientsPage() {
         {data.clients.length === 0 ? (
           <EmptyState icon={UserPlus} title={t('Nessun cliente ancora')} text={t('Aggiungi il tuo primo cliente con il pulsante in alto.')} />
         ) : (
-          <ul className="mt-4 divide-y divide-line">
-            {data.clients.map((c) => (
-              <ClientRow key={c.linkId} item={c} onRemoved={reload} />
-            ))}
-          </ul>
+          <ClientList clients={data.clients} onRemoved={reload} />
         )}
       </Card>
     </div>
+  );
+}
+
+const FILTERS = [
+  { value: 'all', label: 'Tutti', test: () => true },
+  { value: 'shared', label: 'Condivisione attiva', test: (c) => c.status === 'active' && c.sharedAccess },
+  { value: 'private', label: 'Senza condivisione', test: (c) => c.status === 'active' && !c.sharedAccess },
+  { value: 'pending', label: 'In attesa', test: (c) => c.status === 'pending' },
+];
+const SORTS = {
+  name: (a, b) => a.client.fullName.localeCompare(b.client.fullName),
+  recent: (a, b) => new Date(b.since) - new Date(a.since),
+  // chi non fa un controllo da più tempo per primo (i clienti mai controllati in cima)
+  check: (a, b) => (a.lastCheck ? new Date(a.lastCheck.date).getTime() : 0) - (b.lastCheck ? new Date(b.lastCheck.date).getTime() : 0),
+};
+
+/** Elenco dei clienti con ricerca, filtri e ordinamento (utile quando i clienti sono tanti). */
+function ClientList({ clients, onRemoved }) {
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('name');
+  const q = query.trim().toLowerCase();
+  const matches = (c) => !q || `${c.client.fullName} ${c.client.email} ${c.program ?? ''}`.toLowerCase().includes(q);
+  const current = FILTERS.find((f) => f.value === filter);
+  const visible = clients.filter((c) => current.test(c) && matches(c)).sort(SORTS[sort]);
+
+  return (
+    <>
+      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <label className="relative block shrink-0 lg:w-72">
+          <span className="sr-only">{t('Cerca cliente')}</span>
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-ink-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('Cerca per nome, email o percorso…')}
+            className="w-full rounded-xl border border-line bg-surface py-2.5 pr-3 pl-10 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
+          />
+        </label>
+        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+          {FILTERS.map((f) => {
+            const count = clients.filter(f.test).length;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => setFilter(f.value)}
+                aria-pressed={filter === f.value}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition ${
+                  filter === f.value ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-line text-ink-700 hover:border-brand-300'
+                }`}
+              >
+                {t(f.label)} <span className="text-ink-400">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <label className="flex shrink-0 items-center gap-2 text-sm whitespace-nowrap text-ink-500 lg:ml-auto">
+          {t('Ordina per')}
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-ink-900 outline-none focus:border-brand-500">
+            <option value="name">{t('Nome (A–Z)')}</option>
+            <option value="recent">{t('Aggiunti di recente')}</option>
+            <option value="check">{t('Controllo meno recente')}</option>
+          </select>
+        </label>
+      </div>
+      {visible.length === 0 ? (
+        <p className="py-8 text-center text-sm text-ink-500">{t('Nessun cliente corrisponde alla ricerca.')}</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-line">
+          {visible.map((c) => (
+            <ClientRow key={c.linkId} item={c} onRemoved={onRemoved} />
+          ))}
+        </ul>
+      )}
+      <p className="mt-3 text-xs text-ink-400">{t('{shown} di {total} clienti', { shown: visible.length, total: clients.length })}</p>
+    </>
   );
 }
 
@@ -78,47 +151,60 @@ function ClientRow({ item, onRemoved }) {
   }
 
   return (
-    <li className="flex flex-col gap-3 py-4 md:flex-row md:items-center">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+    <li className="grid grid-cols-1 gap-3 py-3.5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-center xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_minmax(0,1fr)_340px]">
+      <div className="flex min-w-0 items-center gap-3">
         <Avatar user={client} size="lg" />
         <div className="min-w-0">
           {item.status === 'active' ? (
-            <Link to={`/app/progressi?cliente=${client.id}`} className="font-semibold hover:underline">
+            <Link to={`/app/progressi?cliente=${client.id}`} className="block truncate font-semibold hover:underline">
               {client.fullName}
             </Link>
           ) : (
-            <p className="font-semibold">{client.fullName}</p>
+            <p className="truncate font-semibold">{client.fullName}</p>
           )}
           <p className="truncate text-sm text-ink-500">{client.email}</p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs md:w-[46%] md:justify-end">
-        {item.program && <span className="rounded-full bg-hover px-3 py-1 text-ink-700">{t(item.program)}</span>}
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        {item.program && <span className="rounded-full bg-hover px-2.5 py-1 text-ink-700">{t(item.program)}</span>}
         {item.status === 'pending' ? (
-          <span className="rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700">{t('In attesa di conferma')}</span>
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">{t('In attesa di conferma')}</span>
         ) : item.sharedAccess ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 font-medium text-brand-800">
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 font-medium text-brand-800">
             <LockOpen className="h-3.5 w-3.5" /> {t('Dati di team condivisi')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-hover px-3 py-1 text-ink-500">
+          <span className="inline-flex items-center gap-1 rounded-full bg-hover px-2.5 py-1 text-ink-500">
             <Lock className="h-3.5 w-3.5" /> {t('Condivisione non autorizzata')}
           </span>
         )}
-        {item.lastCheck && (
-          <span className="text-ink-500">
-            {t('Ultimo controllo: {date}', { date: fmtDate(item.lastCheck.date, { day: 'numeric', month: 'short' }) })}
-            {item.lastCheck.weightKg != null && ` · ${fmtNumber(item.lastCheck.weightKg)} kg`}
-          </span>
-        )}
       </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
+      {item.status === 'active' ? (
+        <p className="text-xs text-ink-500 xl:text-sm">
+          {item.lastCheck ? (
+            <>
+              <span className="block">{t('Ultimo controllo: {date}', { date: fmtDate(item.lastCheck.date, { day: 'numeric', month: 'short' }) })}</span>
+              {item.lastCheck.weightKg != null && <span className="font-medium text-ink-700">{fmtNumber(item.lastCheck.weightKg)} kg</span>}
+            </>
+          ) : (
+            t('Nessun controllo ancora')
+          )}
+        </p>
+      ) : (
+        <span className="hidden xl:block" aria-hidden="true" />
+      )}
+      <div className="flex shrink-0 flex-wrap gap-2 md:col-span-2 xl:col-span-1 xl:justify-end">
         {item.status === 'active' && !confirming && (
           <>
             <Link to={`/app/progressi?cliente=${client.id}`} className="btn-outline">
               <ChartNoAxesColumn className="h-4 w-4" /> {t('Progressi')}
             </Link>
-            <Link to={`/app/agenda?nuovo=1&cliente=${client.id}`} className="btn-soft px-3" aria-label={t('Fissa un appuntamento con {name}', { name: client.firstName })} title={t('Fissa appuntamento')}>
+            <Link
+              to={`/app/agenda?nuovo=1&cliente=${client.id}`}
+              className="btn-soft px-3"
+              aria-label={t('Fissa un appuntamento con {name}', { name: client.firstName })}
+              title={t('Fissa appuntamento')}
+            >
               <CalendarPlus className="h-4 w-4" />
             </Link>
             <Link to={`/app/messaggi?con=${client.id}`} className="btn-soft px-3" aria-label={t('Scrivi a {name}', { name: client.firstName })} title={t('Scrivi')}>
@@ -128,7 +214,9 @@ function ClientRow({ item, onRemoved }) {
         )}
         {confirming ? (
           <>
-            <button type="button" className="btn-soft" onClick={() => setConfirming(false)}>{t('Annulla')}</button>
+            <button type="button" className="btn-soft" onClick={() => setConfirming(false)}>
+              {t('Annulla')}
+            </button>
             <button type="button" className="btn-primary bg-danger px-4 py-2 hover:bg-danger-strong" disabled={busy} onClick={remove}>
               {busy && <Spinner className="h-4 w-4 text-white" />} {t('Conferma rimozione')}
             </button>

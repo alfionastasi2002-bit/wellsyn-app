@@ -1,5 +1,6 @@
 import {
   Archive,
+  Search,
   ArrowDown,
   ArrowUp,
   ChevronDown,
@@ -62,11 +63,13 @@ function WorkoutPlanList() {
   const { data, error, loading, reload, setData } = useApi('/workout-plans');
   const location = useLocation();
   const [tab, setTab] = useState('active');
+  const [query, setQuery] = useState('');
 
   if (loading && !data) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
-  const plans = data.plans;
+  const q = query.trim().toLowerCase();
+  const plans = data.plans.filter((p) => !q || `${p.title} ${p.client?.fullName ?? ''}`.toLowerCase().includes(q));
   const groups = {
     active: plans.filter((p) => p.status === 'active'),
     review: plans.filter((p) => p.needsReview && p.status !== 'archived'),
@@ -95,6 +98,7 @@ function WorkoutPlanList() {
         }
       />
       <Flash>{location.state?.flash}</Flash>
+      <div className="flex flex-wrap items-center gap-3">
       <Tabs
         value={tab}
         onChange={setTab}
@@ -106,6 +110,17 @@ function WorkoutPlanList() {
           { value: 'archived', label: t('Archiviate') },
         ]}
       />
+        <label className="relative block w-full sm:w-72">
+          <span className="sr-only">{t('Cerca')}</span>
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-ink-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('Cerca per cliente o titolo…')}
+            className="w-full rounded-xl border border-line bg-surface py-2.5 pr-3 pl-10 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
+          />
+        </label>
+      </div>
       <Card className="p-2 sm:p-3">
         {groups[tab].length === 0 ? (
           <EmptyState icon={Dumbbell} title={t('Nessuna scheda in questa sezione')}>

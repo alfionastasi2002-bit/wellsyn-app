@@ -146,24 +146,24 @@ function RecentClients({ clients }) {
           <table className="w-full min-w-[460px] text-sm">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
-                <th className="pb-2 font-medium">{t('Cliente')}</th>
-                <th className="pb-2 font-medium">{t('Obiettivo')}</th>
-                <th className="pb-2 font-medium">{t('Ultimo allenamento')}</th>
-                <th className="pb-2 font-medium">{t('Aderenza')}</th>
+                <th className="pr-4 pb-2 font-medium">{t('Cliente')}</th>
+                <th className="pr-4 pb-2 font-medium">{t('Obiettivo')}</th>
+                <th className="pr-4 pb-2 font-medium">{t('Ultimo allenamento')}</th>
+                <th className="pb-2 font-medium whitespace-nowrap">{t('Aderenza')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {clients.map((c) => (
                 <tr key={c.linkId}>
-                  <td className="py-2.5">
+                  <td className="py-2.5 pr-4">
                     <span className="flex items-center gap-2.5">
                       <Avatar user={c.client} size="sm" />
                       <span className="font-medium">{c.client.fullName}</span>
                     </span>
                   </td>
-                  <td className="py-2.5 text-ink-700">{c.program ? t(c.program) : '—'}</td>
-                  <td className="py-2.5 text-ink-700">{relativeDay(c.lastWorkout)}</td>
-                  <td className="py-2.5">
+                  <td className="py-2.5 pr-4 text-ink-700">{c.program ? t(c.program) : '—'}</td>
+                  <td className="py-2.5 pr-4 whitespace-nowrap text-ink-700">{relativeDay(c.lastWorkout)}</td>
+                  <td className="py-2.5 whitespace-nowrap">
                     <span className="font-semibold">{c.adherence}%</span>{' '}
                     <Delta value={c.trend} suffix="%" digits={0} goodWhen="up" className="text-xs" />
                   </td>

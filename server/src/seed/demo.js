@@ -16,6 +16,7 @@ import {
   WorkoutPlan,
 } from '../models/index.js';
 import { addDays, dayKey, weekdayOf, zonedDate } from '../utils/dates.js';
+import { seedCrowd } from './crowd.js';
 
 export const DEMO_PASSWORD = 'Wellsyn2026!';
 export const DEMO_DOMAIN = '@wellsyn.demo';
@@ -125,7 +126,10 @@ const MENU = {
   ],
 };
 
-export async function seedDemoData() {
+/**
+ * Carica i dati demo. extraClients: quanti clienti in più generare (solo per il database di prova in locale).
+ */
+export async function seedDemoData({ extraClients = 0 } = {}) {
   const random = createRandom(2026);
   const now = new Date();
   const today = dayKey(now);
@@ -387,4 +391,10 @@ export async function seedDemoData() {
   ]);
 
   console.log(`✓ Dati demo caricati (${workoutLogs.length} allenamenti, ${checkins.length} controlli).`);
+
+  // Clienti in più per vedere l'app "piena" (solo in locale)
+  if (extraClients > 0) {
+    const crowd = await seedCrowd({ count: extraClients, elena, luca, passwordHash, random, today, daysAgo, SESSIONS, MENU, domain: DEMO_DOMAIN });
+    console.log(`✓ Altri ${crowd.clients} clienti demo (${crowd.appointments} appuntamenti, ${crowd.workouts} allenamenti, ${crowd.checkins} controlli).`);
+  }
 }
