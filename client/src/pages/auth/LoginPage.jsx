@@ -38,14 +38,14 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <div className="mx-auto max-w-[460px]">
-        <LogoStacked imgClassName="h-14 short:h-10 tiny:h-9" />
-        <h1 className="mt-6 text-center font-display text-[28px] font-semibold short:mt-3 short:text-2xl">Bentornato su Wellsyn</h1>
+      <div className="mx-auto w-full max-w-[460px] roomy:py-8">
+        <LogoStacked imgClassName="h-14 short:h-10 tiny:h-8 roomy:h-16" />
+        <h1 className="mt-6 text-center font-display text-[28px] font-semibold short:mt-3 short:text-2xl tiny:mt-2 tiny:text-xl roomy:mt-8 roomy:text-[30px]">Bentornato su Wellsyn</h1>
         <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">
           Accedi al tuo spazio personale e continua il tuo percorso di benessere.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 short:mt-4 short:space-y-2.5" noValidate>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 short:mt-4 short:space-y-2.5 tiny:mt-3 tiny:space-y-2 roomy:mt-8 roomy:space-y-4" noValidate>
           <RolePicker value={role} onChange={setRole} />
           <Field
             icon={Mail}
@@ -94,18 +94,18 @@ export default function LoginPage() {
 
           <FormError>{error}</FormError>
 
-          <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3" disabled={loading}>
+          <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3 tiny:py-2.5 roomy:py-4" disabled={loading}>
             {loading ? <Spinner className="h-5 w-5 text-white" /> : null}
             Accedi <ChevronRight className="h-5 w-5" />
           </button>
         </form>
 
-        <div className="my-5 flex items-center gap-4 text-sm text-ink-400 short:my-3 tiny:hidden">
+        <div className="my-5 flex items-center gap-4 text-sm text-ink-400 short:my-3 tiny:hidden roomy:my-7">
           <span className="h-px flex-1 bg-line" /> oppure <span className="h-px flex-1 bg-line" />
         </div>
         <Link
           to="/registrati"
-          className="flex items-center justify-center gap-1 rounded-xl bg-[#f3f6f5] px-4 py-3.5 text-sm text-ink-700 transition hover:bg-[#eaf0ee] short:py-2.5 tiny:mt-3"
+          className="flex items-center justify-center gap-1 rounded-xl bg-[#f3f6f5] px-4 py-3.5 text-sm text-ink-700 transition hover:bg-[#eaf0ee] short:py-2.5 tiny:mt-3 tiny:py-2 roomy:py-4"
         >
           Non hai un account? <span className="font-semibold text-brand-800">Richiedi l'accesso</span>
           <ChevronRight className="h-4 w-4 text-brand-800" />

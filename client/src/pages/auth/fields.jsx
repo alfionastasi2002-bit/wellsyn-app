@@ -18,11 +18,11 @@ export function RolePicker({ value, onChange }) {
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={`flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 short:py-1.5 text-xs font-medium transition sm:flex-row sm:gap-2 sm:text-sm ${
+          className={`flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 short:py-1.5 text-xs font-medium transition sm:flex-row sm:gap-2 sm:text-sm tiny:py-1 tiny:text-xs ${
             value === v ? 'bg-brand-50 text-brand-800' : 'text-ink-700 hover:bg-[#f4f8f7]'
           }`}
         >
-          <Icon className={`h-5 w-5 shrink-0 ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
+          <Icon className={`h-5 w-5 shrink-0 tiny:hidden ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
           <span className="leading-tight">{label}</span>
         </button>
       ))}
@@ -33,7 +33,7 @@ export function RolePicker({ value, onChange }) {
 /** Campo con icona a sinistra ed etichetta piccola sopra il valore (stile mockup). */
 export function Field({ icon: Icon, label, trailing, ...inputProps }) {
   return (
-    <label className="flex items-center gap-4 rounded-xl border border-line bg-white px-4 py-2.5 short:py-1.5 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
+    <label className="flex items-center gap-4 rounded-xl border border-line bg-white px-4 py-2.5 short:py-1.5 tiny:py-1 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
       {Icon && <Icon className="h-5 w-5 shrink-0 text-ink-700" strokeWidth={1.8} />}
       <span className="min-w-0 flex-1">
         <span className="block text-xs text-ink-500">{label}</span>

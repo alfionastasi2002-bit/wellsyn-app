@@ -33,18 +33,18 @@ export default function RegisterPage() {
 
   return (
     <AuthShell>
-      <div className="mx-auto max-w-[460px]">
-        <LogoStacked imgClassName="h-12 short:h-9" />
-        <h1 className="mt-5 text-center font-display text-[28px] font-semibold short:mt-2 short:text-2xl">Crea il tuo account</h1>
-        <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm">
+      <div className="mx-auto w-full max-w-[460px]">
+        <LogoStacked imgClassName="h-12 short:h-9 tiny:h-7" />
+        <h1 className="mt-5 text-center font-display text-[28px] font-semibold short:mt-2 short:text-2xl tiny:mt-1 tiny:text-lg">Crea il tuo account</h1>
+        <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">
           {isProfessional
             ? 'Gestisci i tuoi clienti, i loro piani e i progressi in un unico spazio.'
             : 'Se segui già un professionista, potrà collegarti al suo spazio con la tua email.'}
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3 short:mt-4 short:space-y-2.5" noValidate>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3 short:mt-4 short:space-y-2.5 tiny:mt-3 tiny:space-y-1.5" noValidate>
           <RolePicker value={form.role} onChange={(role) => setForm({ ...form, role })} />
-          <div className="grid gap-3 short:gap-2.5 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3 short:gap-2.5 tiny:gap-2">
             <Field icon={UserRound} label="Nome" name="firstName" autoComplete="given-name" required value={form.firstName} onChange={set('firstName')} />
             <Field label="Cognome" name="lastName" autoComplete="family-name" required value={form.lastName} onChange={set('lastName')} />
           </div>
@@ -71,13 +71,13 @@ export default function RegisterPage() {
 
           <FormError>{error}</FormError>
 
-          <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3" disabled={loading}>
+          <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3 tiny:py-2.5" disabled={loading}>
             {loading && <Spinner className="h-5 w-5 text-white" />}
             Crea account <ChevronRight className="h-5 w-5" />
           </button>
         </form>
 
-        <Link to="/login" className="mt-5 flex items-center justify-center gap-1 text-sm font-medium text-brand-800 hover:underline short:mt-3">
+        <Link to="/login" className="mt-5 flex items-center justify-center gap-1 text-sm font-medium text-brand-800 hover:underline short:mt-3 tiny:mt-2">
           <ChevronLeft className="h-4 w-4" /> Hai già un account? Accedi
         </Link>
       </div>

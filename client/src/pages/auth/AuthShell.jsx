@@ -3,13 +3,13 @@ import { ChartNoAxesColumn, Check, ChevronRight, Dumbbell, Target, Utensils } fr
 /** Cornice delle pagine di accesso: modulo a sinistra, vetrina illustrata a destra. */
 export function AuthShell({ children }) {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-white sm:bg-gradient-to-br sm:from-[#f3faf7] sm:via-[#e8f5f0] sm:to-[#dcefe8] sm:p-4 lg:p-6">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-white sm:bg-gradient-to-br sm:from-[#f3faf7] sm:via-[#e8f5f0] sm:to-[#dcefe8] sm:p-4 lg:p-6 tiny:p-3">
       {/* Onde decorative di sfondo */}
       <div aria-hidden="true" className="pointer-events-none absolute hidden sm:block -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-[#cfeadf]/60 blur-2xl" />
       <div aria-hidden="true" className="pointer-events-none absolute hidden sm:block -bottom-48 -left-40 h-[560px] w-[560px] rounded-full bg-[#bfe3d5]/50 blur-2xl" />
 
       <div className="relative grid w-full max-w-[1100px] overflow-hidden bg-white sm:rounded-[28px] sm:border sm:border-white/80 sm:shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] lg:grid-cols-[1fr_1.05fr]">
-        <div className="flex flex-col justify-center px-5 py-8 sm:px-12 sm:py-10 lg:px-14 short:py-5">{children}</div>
+        <div className="flex flex-col justify-center px-5 py-6 sm:px-12 sm:py-10 lg:px-14 short:py-5 tiny:py-3">{children}</div>
         <Showcase />
       </div>
     </div>
@@ -18,11 +18,16 @@ export function AuthShell({ children }) {
 
 function Showcase() {
   return (
-    <aside aria-hidden="true" className="relative hidden overflow-hidden bg-gradient-to-b from-[#eef7f3] to-[#dff0e9] lg:block">
+    // L'altezza della vetrina la decide il modulo a sinistra; i contenuti si adattano a quello spazio.
+    <aside
+      aria-hidden="true"
+      className="relative hidden overflow-hidden bg-gradient-to-b from-[#eef7f3] to-[#dff0e9] lg:block"
+      style={{ containerType: 'size', containerName: 'showcase' }}
+    >
       <img
         src="/images/hero-client.jpg"
         alt=""
-        className="absolute top-0 right-0 h-[330px] w-[66%] object-cover object-[45%_30%]"
+        className="absolute top-0 right-0 h-[48%] max-h-[340px] w-[66%] object-cover object-[45%_30%]"
         style={{
           maskImage: 'linear-gradient(to right, transparent 0%, black 55%), linear-gradient(to bottom, black 60%, transparent 100%)',
           maskComposite: 'intersect',
@@ -30,15 +35,15 @@ function Showcase() {
           WebkitMaskComposite: 'source-in',
         }}
       />
-      <div className="absolute inset-0 z-10 flex flex-col px-10 pt-12 pb-8 short:pt-8">
-        <h2 className="max-w-[270px] font-display text-[32px] leading-[1.12] font-semibold text-ink-900 short:text-[28px]">
+      <div className="absolute inset-0 z-10 flex flex-col px-10 py-8 sc-text:pt-12">
+        <h2 className="max-w-[270px] font-display text-[28px] leading-[1.12] font-semibold text-ink-900 sc-text:text-[32px]">
           Un benessere più consapevole, ogni giorno.
         </h2>
-        <p className="mt-3 max-w-[250px] text-[15px] leading-relaxed text-ink-700 short:hidden">
+        <p className="mt-3 hidden max-w-[250px] text-[15px] leading-relaxed text-ink-700 sc-text:block">
           Nutrizione, allenamento e supporto professionale, tutto in un unico luogo per una versione più sana e felice di te.
         </p>
 
-        <div className="mt-8 space-y-4 short:mt-6">
+        <div className="mt-6 space-y-4">
           <div className="ml-6 -rotate-[1.5deg] rounded-2xl bg-white/95 p-4 shadow-float">
             <div className="flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-700"><ChartNoAxesColumn className="h-4 w-4" /></span>
@@ -64,7 +69,7 @@ function Showcase() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1.15fr_1fr] gap-4">
+          <div className="hidden grid-cols-[1.15fr_1fr] gap-4 sc-cards:grid">
             <div className="rotate-[1.5deg] rounded-2xl bg-white/95 p-4 shadow-float">
               <p className="flex items-center gap-2 text-sm font-semibold">
                 <Utensils className="h-4 w-4 text-brand-700" /> Piano nutrizionale
@@ -109,7 +114,7 @@ function Showcase() {
           </div>
         </div>
 
-        <figure className="mt-auto pt-6 pl-6 short:hidden">
+        <figure className="mt-auto hidden pt-6 pl-6 sc-quote:block">
           <blockquote className="font-serif text-[24px] leading-snug text-ink-900 italic">
             “Un te più sano
             <br />è un te più felice.”
