@@ -18,6 +18,9 @@ const mealSchema = z.object({
   name: z.string({ error: 'Ogni pasto deve avere un nome.' }).trim().min(1, 'Ogni pasto deve avere un nome.').max(120),
   description: optionalText(400),
   kcal: optionalNumber(0, 5000, 'Calorie'),
+  protein: optionalNumber(0, 500, 'Proteine'),
+  carbs: optionalNumber(0, 800, 'Carboidrati'),
+  fat: optionalNumber(0, 400, 'Grassi'),
 });
 
 const daySchema = z.object({

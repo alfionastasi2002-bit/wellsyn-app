@@ -9,8 +9,14 @@ export function publicUser(user) {
     title: user.title ?? null,
     role: user.role,
     avatarUrl: user.avatarUrl ?? null,
+    avatarColor: user.avatarColor ?? null,
     specialization: user.specialization ?? null,
     bio: user.bio ?? null,
+    specialties: user.specialties?.length ? user.specialties : [],
+    yearsExperience: user.yearsExperience ?? null,
+    city: user.city ?? null,
+    studioAddress: user.studioAddress ?? null,
+    onlineSessions: user.onlineSessions ?? null,
   };
 }
 

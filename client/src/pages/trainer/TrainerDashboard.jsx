@@ -34,14 +34,15 @@ import {
 } from '../../components/ui.jsx';
 import { displayName, fmtDate, fmtNumber, fmtTime, relativeDay } from '../../lib/format.js';
 import { useApi } from '../../lib/useApi.js';
+import { t } from '../../i18n/index.js';
+import { LEVEL_LABELS } from '../../lib/labels.js';
 
-const LEVELS = { principiante: 'Livello principiante', intermedio: 'Livello intermedio', avanzato: 'Livello avanzato' };
 
 function nextLabel(minutes) {
-  if (minutes == null) return 'Nessun’altra sessione oggi';
-  if (minutes < 60) return `Prossima tra ${minutes} min`;
+  if (minutes == null) return t('Nessun’altra sessione oggi');
+  if (minutes < 60) return t('Prossima tra {n} min', { n: minutes });
   const hours = Math.round(minutes / 60);
-  return `Prossima tra ${hours} ${hours === 1 ? 'ora' : 'ore'}`;
+  return hours === 1 ? t('Prossima tra 1 ora') : t('Prossima tra {n} ore', { n: hours });
 }
 
 export default function TrainerDashboard() {
@@ -57,21 +58,21 @@ export default function TrainerDashboard() {
     <div className="space-y-5">
       <Hero
         firstName={data.user.firstName}
-        title="Ottimo lavoro oggi!"
-        subtitle="I tuoi clienti stanno facendo progressi. Continua a guidarli verso i loro obiettivi."
-        cta={{ label: 'Visualizza clienti', to: '/app/clienti' }}
+        title={t('Ottimo lavoro oggi!')}
+        subtitle={t('I tuoi clienti stanno facendo progressi. Continua a guidarli verso i loro obiettivi.')}
+        cta={{ label: t('Visualizza clienti'), to: '/app/clienti' }}
         image="/images/hero-trainer.jpg"
         imagePosition="50% 30%"
         aside={
           <div>
-            <p className="eyebrow">Panoramica di oggi</p>
+            <p className="eyebrow">{t('Panoramica di oggi')}</p>
             <ul className="mt-4 space-y-4">
-              <OverviewRow icon={CalendarDays} title={`${today.sessions} sessioni programmate`} sub={nextLabel(today.nextInMinutes)} />
+              <OverviewRow icon={CalendarDays} title={t('{n} sessioni programmate', { n: today.sessions })} sub={nextLabel(today.nextInMinutes)} />
               <OverviewRow
                 icon={CircleCheck}
                 solid
-                title={`${today.completedToday} allenamenti completati`}
-                sub={`${completedDiff >= 0 ? '+' : ''}${completedDiff} rispetto a ieri`}
+                title={t('{n} allenamenti completati', { n: today.completedToday })}
+                sub={t('{n} rispetto a ieri', { n: `${completedDiff >= 0 ? '+' : ''}${completedDiff}` })}
               />
             </ul>
           </div>
@@ -79,28 +80,28 @@ export default function TrainerDashboard() {
       />
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Users} label="Clienti attivi" value={stats.activeClients.total} to="/app/clienti">
-          <Delta value={stats.activeClients.newThisMonth} digits={0} goodWhen="up" /> nuovi questo mese
+        <StatCard icon={Users} label={t('Clienti attivi')} value={stats.activeClients.total} to="/app/clienti">
+          <Delta value={stats.activeClients.newThisMonth} digits={0} goodWhen="up" /> {t('nuovi questo mese')}
         </StatCard>
-        <StatCard icon={CalendarDays} label="Sessioni questa settimana" value={stats.sessionsThisWeek.total} to="/app/sessioni">
-          <Delta value={sessionsDiff} digits={0} goodWhen="up" /> rispetto alla settimana scorsa
+        <StatCard icon={CalendarDays} label={t('Sessioni questa settimana')} value={stats.sessionsThisWeek.total} to="/app/agenda">
+          <Delta value={sessionsDiff} digits={0} goodWhen="up" /> {t('rispetto alla settimana scorsa')}
         </StatCard>
-        <StatCard icon={CircleCheck} iconTone="solid" label="Allenamenti completati" value={stats.workoutsThisWeek.total}>
+        <StatCard icon={CircleCheck} iconTone="solid" label={t('Allenamenti completati')} value={stats.workoutsThisWeek.total}>
           {stats.workoutsThisWeek.changePct != null ? (
             <>
-              <Delta value={stats.workoutsThisWeek.changePct} suffix="%" digits={0} goodWhen="up" /> rispetto alla settimana scorsa
+              <Delta value={stats.workoutsThisWeek.changePct} suffix="%" digits={0} goodWhen="up" /> {t('rispetto alla settimana scorsa')}
             </>
           ) : (
-            'questa settimana'
+            t('questa settimana')
           )}
         </StatCard>
-        <StatCard icon={ClipboardList} label="Schede in attesa" value={stats.plansToReview} to="/app/schede">
+        <StatCard icon={ClipboardList} label={t('Schede in attesa')} value={stats.plansToReview} to="/app/schede">
           {stats.plansToReview > 0 ? (
             <span className="inline-flex items-center gap-1 font-medium text-amber-600">
-              <Clock className="h-3.5 w-3.5" /> Da aggiornare
+              <Clock className="h-3.5 w-3.5" /> {t('Da aggiornare')}
             </span>
           ) : (
-            'tutte aggiornate'
+            t('tutte aggiornate')
           )}
         </StatCard>
       </div>
@@ -123,7 +124,7 @@ export default function TrainerDashboard() {
 function OverviewRow({ icon: Icon, title, sub, solid }) {
   return (
     <li className="flex items-center gap-3">
-      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${solid ? 'bg-brand-600 text-white' : 'bg-white/80 text-ink-700'}`}>
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${solid ? 'bg-brand-600 text-white' : 'bg-surface/80 text-ink-700'}`}>
         <Icon className="h-5 w-5" />
       </span>
       <span>
@@ -137,18 +138,18 @@ function OverviewRow({ icon: Icon, title, sub, solid }) {
 function RecentClients({ clients }) {
   return (
     <Card className="p-5">
-      <CardHeader icon={Users} title="Clienti recenti" action={<ArrowLink to="/app/clienti">Vedi tutti</ArrowLink>} />
+      <CardHeader icon={Users} title={t('Clienti recenti')} action={<ArrowLink to="/app/clienti">{t('Vedi tutti')}</ArrowLink>} />
       {clients.length === 0 ? (
-        <EmptyState title="Nessun cliente" text="Aggiungi il tuo primo cliente dalla sezione Clienti." />
+        <EmptyState title={t('Nessun cliente')} text={t('Aggiungi il tuo primo cliente dalla sezione Clienti.')} />
       ) : (
         <div className="mt-4 relative overflow-x-auto">
           <table className="w-full min-w-[460px] text-sm">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
-                <th className="pb-2 font-medium">Cliente</th>
-                <th className="pb-2 font-medium">Obiettivo</th>
-                <th className="pb-2 font-medium">Ultimo allenamento</th>
-                <th className="pb-2 font-medium">Aderenza</th>
+                <th className="pb-2 font-medium">{t('Cliente')}</th>
+                <th className="pb-2 font-medium">{t('Obiettivo')}</th>
+                <th className="pb-2 font-medium">{t('Ultimo allenamento')}</th>
+                <th className="pb-2 font-medium">{t('Aderenza')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -160,7 +161,7 @@ function RecentClients({ clients }) {
                       <span className="font-medium">{c.client.fullName}</span>
                     </span>
                   </td>
-                  <td className="py-2.5 text-ink-700">{c.program ?? '—'}</td>
+                  <td className="py-2.5 text-ink-700">{c.program ? t(c.program) : '—'}</td>
                   <td className="py-2.5 text-ink-700">{relativeDay(c.lastWorkout)}</td>
                   <td className="py-2.5">
                     <span className="font-semibold">{c.adherence}%</span>{' '}
@@ -170,7 +171,7 @@ function RecentClients({ clients }) {
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-[11px] text-ink-400">Aderenza: allenamenti svolti sugli allenamenti previsti nelle ultime 4 settimane.</p>
+          <p className="mt-2 text-[11px] text-ink-400">{t('Aderenza: allenamenti svolti sugli allenamenti previsti nelle ultime 4 settimane.')}</p>
         </div>
       )}
     </Card>
@@ -180,9 +181,9 @@ function RecentClients({ clients }) {
 function FeaturedPlan({ plan }) {
   return (
     <Card className="flex flex-col p-5">
-      <CardHeader icon={Dumbbell} title="Scheda allenamento" action={<ArrowLink to="/app/schede">Vedi tutte</ArrowLink>} />
+      <CardHeader icon={Dumbbell} title={t('Scheda allenamento')} action={<ArrowLink to="/app/schede">{t('Vedi tutte')}</ArrowLink>} />
       {!plan ? (
-        <EmptyState title="Nessuna scheda attiva" text="Crea la prima scheda per un tuo cliente." />
+        <EmptyState title={t('Nessuna scheda attiva')} text={t('Crea la prima scheda per un tuo cliente.')} />
       ) : (
         <>
           <div className="mt-4 flex items-center gap-3">
@@ -190,11 +191,11 @@ function FeaturedPlan({ plan }) {
             <div className="min-w-0 flex-1">
               <p className="font-semibold">{plan.client.fullName}</p>
               <p className="truncate text-xs text-ink-500">
-                {plan.session?.focus ?? plan.title} • {LEVELS[plan.level]}
+                {plan.session?.focus ?? plan.title} • {LEVEL_LABELS[plan.level]}
               </p>
             </div>
             <span className="text-xs whitespace-nowrap text-ink-500">
-              Settimana {plan.currentWeek} di {plan.weeks}
+              {t('Settimana {current} di {total}', { current: plan.currentWeek, total: plan.weeks })}
             </span>
           </div>
           {plan.session && (
@@ -202,10 +203,10 @@ function FeaturedPlan({ plan }) {
               <table className="w-full min-w-[360px] text-[13px]">
                 <thead>
                   <tr className="text-left text-[10px] tracking-wider text-ink-500 uppercase">
-                    <th className="pb-2 font-medium">Esercizio</th>
-                    <th className="pb-2 text-center font-medium">Serie</th>
-                    <th className="pb-2 text-center font-medium">Ripetizioni</th>
-                    <th className="pb-2 text-right font-medium">Recupero</th>
+                    <th className="pb-2 font-medium">{t('Esercizio')}</th>
+                    <th className="pb-2 text-center font-medium">{t('Serie')}</th>
+                    <th className="pb-2 text-center font-medium">{t('Ripetizioni')}</th>
+                    <th className="pb-2 text-right font-medium">{t('Recupero')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -223,7 +224,7 @@ function FeaturedPlan({ plan }) {
           )}
           <div className="mt-auto pt-4">
             <Link to={`/app/schede/${plan.id}`} className="btn-primary w-full">
-              Aggiorna scheda <ArrowRight className="h-4 w-4" />
+              {t('Aggiorna scheda')} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </>
@@ -237,12 +238,12 @@ const diff = (a, b) => (a == null || b == null ? null : Math.round((a - b) * 10)
 function NutritionCheck({ check, locked }) {
   return (
     <Card className="p-5 lg:col-span-2 2xl:col-span-1">
-      <CardHeader icon={Apple} title="Ultimo check nutrizionale" />
+      <CardHeader icon={Apple} title={t('Ultimo check nutrizionale')} />
       {!check ? (
         <EmptyState
           icon={Lock}
-          title="Nessun check condiviso"
-          text="Vedrai i check nutrizionali dei clienti che autorizzano la condivisione con il loro team."
+          title={t('Nessun check condiviso')}
+          text={t('Vedrai i check nutrizionali dei clienti che autorizzano la condivisione con il loro team.')}
         />
       ) : (
         <>
@@ -253,11 +254,11 @@ function NutritionCheck({ check, locked }) {
               <p className="text-xs text-ink-500">{fmtDate(check.date, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-2 rounded-xl bg-[#f4f8f7] p-3">
-            <Metric label="Peso attuale" value={check.current.weightKg} unit="kg" delta={diff(check.current.weightKg, check.previous?.weightKg)} />
-            <Metric label="Massa grassa" value={check.current.bodyFatPct} unit="%" delta={diff(check.current.bodyFatPct, check.previous?.bodyFatPct)} />
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-2 rounded-xl bg-soft p-3">
+            <Metric label={t('Peso attuale')} value={check.current.weightKg} unit="kg" delta={diff(check.current.weightKg, check.previous?.weightKg)} />
+            <Metric label={t('Massa grassa')} value={check.current.bodyFatPct} unit="%" delta={diff(check.current.bodyFatPct, check.previous?.bodyFatPct)} />
             <Metric
-              label="Massa muscolare"
+              label={t('Massa muscolare')}
               value={check.current.muscleMassKg}
               unit="kg"
               delta={diff(check.current.muscleMassKg, check.previous?.muscleMassKg)}
@@ -266,14 +267,14 @@ function NutritionCheck({ check, locked }) {
           </div>
           {check.notes && (
             <div className="mt-3">
-              <p className="text-xs font-semibold">Note della nutrizionista</p>
+              <p className="text-xs font-semibold">{t('Note della nutrizionista')}</p>
               <blockquote className="mt-1.5 flex gap-2 border-l-2 border-brand-200 pl-3 text-[13px] text-ink-700 italic">
                 <Quote className="h-3.5 w-3.5 shrink-0 fill-brand-300 text-brand-300" />
                 {check.notes}
               </blockquote>
               {check.nutritionist && (
                 <p className="mt-2 flex items-center gap-2 text-xs text-ink-500">
-                  <Avatar user={check.nutritionist} size="sm" /> {displayName(check.nutritionist)} — Nutrizionista
+                  <Avatar user={check.nutritionist} size="sm" /> {displayName(check.nutritionist)} {t('— Nutrizionista')}
                 </p>
               )}
             </div>
@@ -283,7 +284,7 @@ function NutritionCheck({ check, locked }) {
       {locked > 0 && (
         <p className="mt-4 flex items-start gap-2 text-xs text-ink-500">
           <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {locked === 1 ? '1 cliente non ha' : `${locked} clienti non hanno`} ancora autorizzato la condivisione.
+          {locked === 1 ? t('1 cliente non ha ancora autorizzato la condivisione.') : t('{n} clienti non hanno ancora autorizzato la condivisione.', { n: locked })}
         </p>
       )}
     </Card>
@@ -307,12 +308,12 @@ function Consistency({ rows }) {
   const data = useMemo(() => rows.slice(-RANGES.find((r) => r.key === range).weeks), [rows, range]);
   return (
     <Card className="p-5">
-      <CardHeader icon={ChartNoAxesColumn} title="Costanza negli allenamenti" action={<RangeTabs value={range} onChange={setRange} />} />
+      <CardHeader icon={ChartNoAxesColumn} title={t('Costanza negli allenamenti')} action={<RangeTabs value={range} onChange={setRange} />} />
       <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row">
         <div className="w-full min-w-0 flex-1">
           <ConsistencyChart data={data} />
         </div>
-        <ProgressRing value={totalPercent(data)} sublabel="Allenamenti completati" />
+        <ProgressRing value={totalPercent(data)} sublabel={t('Allenamenti completati')} />
       </div>
     </Card>
   );
@@ -321,9 +322,9 @@ function Consistency({ rows }) {
 function NextSession({ session }) {
   return (
     <Card className="flex flex-col p-5">
-      <CardHeader icon={CalendarDays} title="Prossima sessione" action={<ArrowLink to="/app/sessioni">Calendario</ArrowLink>} />
+      <CardHeader icon={CalendarDays} title={t('Prossima sessione')} action={<ArrowLink to="/app/agenda">{t('Calendario')}</ArrowLink>} />
       {!session ? (
-        <EmptyState title="Nessuna sessione in programma" />
+        <EmptyState title={t('Nessuna sessione in programma')} />
       ) : (
         <>
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-line p-3">
@@ -346,7 +347,7 @@ function NextSession({ session }) {
               </li>
             )}
             <li className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-ink-500" /> {session.durationMin} minuti
+              <Clock className="h-4 w-4 text-ink-500" /> {t('{n} minuti', { n: session.durationMin })}
             </li>
             {session.notes && (
               <li className="flex items-center gap-2">
@@ -355,8 +356,8 @@ function NextSession({ session }) {
             )}
           </ul>
           <div className="mt-auto pt-4">
-            <Link to="/app/sessioni" className="btn-outline w-full py-3">
-              Visualizza dettagli <ChevronRight className="h-4 w-4" />
+            <Link to="/app/agenda" className="btn-outline w-full py-3">
+              {t('Visualizza dettagli')} <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
         </>

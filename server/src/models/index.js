@@ -1,4 +1,4 @@
-export { User, ROLES, PROFESSIONAL_ROLES } from './User.js';
+export { User, ROLES, PROFESSIONAL_ROLES, AVATAR_COLORS, COVER_STYLES, ACTIVITY_LEVELS } from './User.js';
 export { CareLink } from './CareLink.js';
 export { MealPlan, MEAL_TYPES } from './MealPlan.js';
 export { WorkoutPlan } from './WorkoutPlan.js';

@@ -5,6 +5,7 @@ import { api } from '../../lib/api.js';
 import { displayName, ROLE_LABELS } from '../../lib/format.js';
 import { NAVIGATION } from '../../navigation.js';
 import { Avatar } from '../Avatar.jsx';
+import { t } from '../../i18n/index.js';
 
 const PLACEHOLDER = {
   client: 'Cerca sezioni o professionisti…',
@@ -39,8 +40,8 @@ export function QuickSearch({ role }) {
         .then(({ team }) =>
           setPeople(
             team
-              .filter((t) => t.status === 'active')
-              .map((t) => ({ label: displayName(t.professional), sub: ROLE_LABELS[t.role], to: `/app/notifiche?con=${t.professional.id}`, user: t.professional })),
+              .filter((link) => link.status === 'active')
+              .map((link) => ({ label: displayName(link.professional), sub: ROLE_LABELS[link.role], to: `/app/notifiche?con=${link.professional.id}`, user: link.professional })),
           ),
         )
         .catch(() => {});
@@ -50,7 +51,7 @@ export function QuickSearch({ role }) {
           setPeople(
             clients
               .filter((c) => c.status === 'active')
-              .map((c) => ({ label: c.client.fullName, sub: c.program ? `Cliente · ${c.program}` : 'Cliente', to: `/app/progressi?cliente=${c.client.id}`, user: c.client })),
+              .map((c) => ({ label: c.client.fullName, sub: c.program ? `${t('Cliente')} · ${t(c.program)}` : t('Cliente'), to: `/app/progressi?cliente=${c.client.id}`, user: c.client })),
           ),
         )
         .catch(() => {});
@@ -58,8 +59,8 @@ export function QuickSearch({ role }) {
   }
 
   const sections = [
-    ...NAVIGATION[role].map((i) => ({ label: i.label, sub: 'Sezione', to: i.path ? `/app/${i.path}` : '/app', icon: i.icon })),
-    { label: 'Centro assistenza', sub: 'Sezione', to: '/app/supporto', icon: LifeBuoy },
+    ...NAVIGATION[role].map((i) => ({ label: i.label, sub: t('Sezione'), to: i.path ? `/app/${i.path}` : '/app', icon: i.icon })),
+    { label: t('Centro assistenza'), sub: t('Sezione'), to: '/app/supporto', icon: LifeBuoy },
   ];
   const q = normalize(query.trim());
   const results = q ? [...(people ?? []), ...sections].filter((r) => normalize(r.label).includes(q)).slice(0, 8) : [];
@@ -88,7 +89,7 @@ export function QuickSearch({ role }) {
   return (
     <div ref={ref} className="relative hidden max-w-[520px] flex-1 md:block">
       <label className="relative block">
-        <span className="sr-only">Cerca</span>
+        <span className="sr-only">{t('Cerca')}</span>
         <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-ink-500" />
         <input
           type="search"
@@ -103,18 +104,18 @@ export function QuickSearch({ role }) {
             setOpen(true);
           }}
           onKeyDown={onKeyDown}
-          placeholder={PLACEHOLDER[role]}
+          placeholder={t(PLACEHOLDER[role])}
           role="combobox"
           aria-expanded={open && results.length > 0}
           aria-controls="quick-search-results"
           aria-autocomplete="list"
-          className="h-11 w-full rounded-xl border border-transparent bg-[#eef3f1] pr-4 pl-12 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-300 focus:bg-white"
+          className="h-11 w-full rounded-xl border border-transparent bg-muted pr-4 pl-12 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-300 focus:bg-surface"
         />
       </label>
       {open && q && (
         <div id="quick-search-results" role="listbox" className="card absolute inset-x-0 top-12 z-30 overflow-hidden p-1.5 shadow-float">
           {results.length === 0 ? (
-            <p className="px-3 py-2.5 text-sm text-ink-500">Nessun risultato per “{query}”.</p>
+            <p className="px-3 py-2.5 text-sm text-ink-500">{t('Nessun risultato per “{query}”.', { query })}</p>
           ) : (
             results.map((r, i) => {
               const Icon = r.icon;
@@ -131,7 +132,7 @@ export function QuickSearch({ role }) {
                   {r.user ? (
                     <Avatar user={r.user} size="sm" />
                   ) : (
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[#eef3f1] text-ink-700">
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-muted text-ink-700">
                       <Icon className="h-4 w-4" />
                     </span>
                   )}

@@ -33,9 +33,10 @@ import {
   Spinner,
 } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
-import { capitalize, DAY_NAMES, displayName, fmtDate, fmtDayKey, fmtNumber, ROLE_LABELS, todayKey } from '../../lib/format.js';
-import { LEVEL_LABELS, MEAL_META } from '../../lib/labels.js';
+import { capitalize, displayName, fmtDate, fmtDayKey, fmtNumber, ROLE_LABELS, todayKey } from '../../lib/format.js';
+import { LEVEL_LABELS, MEAL_META, WEEKDAYS } from '../../lib/labels.js';
 import { useApi } from '../../lib/useApi.js';
+import { t, translateMessage } from '../../i18n/index.js';
 
 export default function ClientDashboard() {
   const { data, error, loading, reload, setData } = useApi('/dashboard/client');
@@ -48,15 +49,15 @@ export default function ClientDashboard() {
     <div className="space-y-5">
       <Hero
         firstName={data.user.firstName}
-        title="Stai facendo un lavoro fantastico!"
-        subtitle="La costanza di oggi costruisce un domani più sano e felice."
-        cta={{ label: 'Continua così', to: '/app/allenamenti' }}
+        title={t('Stai facendo un lavoro fantastico!')}
+        subtitle={t('La costanza di oggi costruisce un domani più sano e felice.')}
+        cta={{ label: t('Continua così'), to: '/app/allenamenti' }}
         image="/images/hero-client.jpg"
         imagePosition="40% 30%"
         aside={
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
             <div>
-              <p className="eyebrow">Peso attuale</p>
+              <p className="eyebrow">{t('Peso attuale')}</p>
               <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
                 <span className="font-display text-[40px] leading-none font-semibold">
                   {fmtNumber(weight.current)} <span className="text-2xl">kg</span>
@@ -64,22 +65,22 @@ export default function ClientDashboard() {
                 {weight.delta != null && (
                   <span className="text-sm leading-tight">
                     <Delta value={weight.delta} suffix=" kg" goodWhen="any" />
-                    <span className="block text-ink-700">dall'inizio</span>
+                    <span className="block text-ink-700">{t("dall'inizio")}</span>
                   </span>
                 )}
               </div>
             </div>
-            <Link to="/app/controlli" className="group block xl:border-t xl:border-brand-200/70 xl:pt-5">
-              <p className="eyebrow">Prossimo controllo</p>
+            <Link to="/app/agenda" className="group block xl:border-t xl:border-brand-200/70 xl:pt-5">
+              <p className="eyebrow">{t('Prossimo controllo')}</p>
               <div className="mt-3 flex items-center gap-3">
                 <IconBadge icon={CalendarDays} size="lg" tone="brand" />
                 {data.nextCheck ? (
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold text-ink-900">{fmtDate(data.nextCheck.date)}</span>
-                    <span className="block text-sm text-ink-700">{data.nextCheck.type}</span>
+                    <span className="block text-sm text-ink-700">{t(data.nextCheck.type)}</span>
                   </span>
                 ) : (
-                  <span className="flex-1 text-sm text-ink-700">Nessun controllo in programma</span>
+                  <span className="flex-1 text-sm text-ink-700">{t('Nessun controllo in programma')}</span>
                 )}
                 <ChevronRight className="h-5 w-5 shrink-0 text-ink-400 transition group-hover:translate-x-0.5" />
               </div>
@@ -136,7 +137,7 @@ function TodayWorkout({ workout, onChange }) {
       await api('/me/workouts/today', { method: 'PUT', body: { completed } });
       onChange(completed);
     } catch (err) {
-      setError(err.message);
+      setError(translateMessage(err.message));
     } finally {
       setSaving(false);
     }
@@ -144,18 +145,18 @@ function TodayWorkout({ workout, onChange }) {
 
   return (
     <Card className="flex flex-col p-5">
-      <CardHeader icon={Dumbbell} title="Allenamento di oggi" action={<ArrowLink to="/app/allenamenti">Vedi piano</ArrowLink>} />
+      <CardHeader icon={Dumbbell} title={t('Allenamento di oggi')} action={<ArrowLink to="/app/allenamenti">{t('Vedi piano')}</ArrowLink>} />
       {!workout ? (
-        <EmptyState icon={Dumbbell} title="Nessuna scheda attiva" text="Il tuo personal trainer non ti ha ancora assegnato una scheda." />
+        <EmptyState icon={Dumbbell} title={t('Nessuna scheda attiva')} text={t('Il tuo personal trainer non ti ha ancora assegnato una scheda.')} />
       ) : !session ? (
         <div className="mt-5 flex flex-1 flex-col">
-          <p className="font-display text-xl font-semibold">Giorno di recupero</p>
+          <p className="font-display text-xl font-semibold">{t('Giorno di recupero')}</p>
           <p className="mt-2 text-sm text-ink-700">
-            Oggi riposo: il recupero fa parte dell'allenamento.
+            {t("Oggi riposo: il recupero fa parte dell'allenamento.")}
             {workout.next && (
               <>
                 {' '}
-                Prossima sessione: <strong>{workout.next.name}</strong> ({DAY_NAMES[workout.next.dayOfWeek].toLowerCase()}).
+                {t('Prossima sessione:')} <strong>{workout.next.name}</strong> ({WEEKDAYS[workout.next.dayOfWeek - 1].long.toLowerCase()}).
               </>
             )}
           </p>
@@ -183,15 +184,15 @@ function TodayWorkout({ workout, onChange }) {
             {workout.completedToday ? (
               <div className="flex items-center justify-between gap-3 rounded-full bg-brand-50 py-2 pr-2 pl-5">
                 <span className="inline-flex items-center gap-2 font-semibold text-brand-800">
-                  <CircleCheck className="h-5 w-5" /> Completato, ottimo lavoro!
+                  <CircleCheck className="h-5 w-5" /> {t('Completato, ottimo lavoro!')}
                 </span>
                 <button type="button" className="btn-soft" disabled={saving} onClick={() => toggle(false)}>
-                  {saving ? <Spinner className="h-4 w-4" /> : 'Annulla'}
+                  {saving ? <Spinner className="h-4 w-4" /> : t('Annulla')}
                 </button>
               </div>
             ) : (
               <button type="button" className="btn-primary w-full py-3.5 text-[15px]" disabled={saving} onClick={() => toggle(true)}>
-                {saving ? <Spinner className="h-5 w-5 text-white" /> : <CircleCheck className="h-5 w-5" />} Segna come completato
+                {saving ? <Spinner className="h-5 w-5 text-white" /> : <CircleCheck className="h-5 w-5" />} {t('Segna come completato')}
               </button>
             )}
             {error && <p className="mt-2 text-sm text-amber-700">{error}</p>}
@@ -213,7 +214,7 @@ function TodayMeals({ meals, onToggle }) {
       await api('/me/meals/today', { method: 'PUT', body: { mealType: meal.type, done: !meal.done } });
       onToggle(meal.type, !meal.done);
     } catch (err) {
-      setError(err.message);
+      setError(translateMessage(err.message));
     } finally {
       setBusy(null);
     }
@@ -221,16 +222,16 @@ function TodayMeals({ meals, onToggle }) {
 
   return (
     <Card className="p-5">
-      <CardHeader icon={Utensils} title="Piano alimentare" action={<ArrowLink to="/app/alimentazione">Vedi piano</ArrowLink>} />
+      <CardHeader icon={Utensils} title={t('Piano alimentare')} action={<ArrowLink to="/app/alimentazione">{t('Vedi piano')}</ArrowLink>} />
       {!meals || meals.today.length === 0 ? (
-        <EmptyState icon={Utensils} title="Nessun piano attivo" text="La tua nutrizionista non ti ha ancora assegnato un piano." />
+        <EmptyState icon={Utensils} title={t('Nessun piano attivo')} text={t('La tua nutrizionista non ti ha ancora assegnato un piano.')} />
       ) : (
         <>
           <div className="mt-5 flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold">I pasti di oggi</p>
+            <p className="text-sm font-semibold">{t('I pasti di oggi')}</p>
             <div className="w-36 text-right">
               <p className="text-xs text-ink-500">
-                {meals.completed} di {meals.today.length} completati
+                {t('{done} di {total} completati', { done: meals.completed, total: meals.today.length })}
               </p>
               <ProgressBar value={meals.completed} max={meals.today.length} className="mt-1.5" />
             </div>
@@ -241,7 +242,7 @@ function TodayMeals({ meals, onToggle }) {
               const MealIcon = meta.icon;
               return (
                 <li key={meal.type} className="flex items-center gap-3 rounded-xl px-1 py-2">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fdf3e7] text-[#b8692a]">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-warm text-warm-ink">
                     <MealIcon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -253,7 +254,7 @@ function TodayMeals({ meals, onToggle }) {
                     onClick={() => toggle(meal)}
                     disabled={busy === meal.type}
                     aria-pressed={meal.done}
-                    aria-label={`${meta.label}: ${meal.done ? 'segna come non consumato' : 'segna come consumato'}`}
+                    aria-label={`${meta.label}: ${meal.done ? t('segna come non consumato') : t('segna come consumato')}`}
                     className={`grid h-7 w-7 place-items-center rounded-full border-2 transition ${
                       meal.done ? 'border-brand-500 bg-brand-500 text-white' : 'border-ink-300 text-transparent hover:border-brand-400'
                     }`}
@@ -278,9 +279,9 @@ function WeekCard({ workout }) {
   const today = todayKey();
   return (
     <Card className="p-5 lg:col-span-2 xl:col-span-1">
-      <CardHeader icon={CalendarCheck} title="Allenamenti questa settimana" action={<ArrowLink to="/app/allenamenti">Vedi tutti</ArrowLink>} />
+      <CardHeader icon={CalendarCheck} title={t('Allenamenti questa settimana')} action={<ArrowLink to="/app/allenamenti">{t('Vedi tutti')}</ArrowLink>} />
       {!workout ? (
-        <EmptyState title="Nessuna scheda attiva" text="Qui vedrai gli allenamenti della settimana." />
+        <EmptyState title={t('Nessuna scheda attiva')} text={t('Qui vedrai gli allenamenti della settimana.')} />
       ) : (
         <>
           <div className="mt-4 flex items-end justify-between gap-4">
@@ -288,7 +289,7 @@ function WeekCard({ workout }) {
               <span className="font-display text-[32px] leading-none font-semibold">
                 {workout.week.completed} / {workout.week.planned}
               </span>
-              <span className="ml-2 text-sm text-ink-500">completati</span>
+              <span className="ml-2 text-sm text-ink-500">{t('completati')}</span>
             </p>
           </div>
           <ProgressBar value={workout.week.completed} max={workout.week.planned} className="mt-3" />
@@ -307,15 +308,15 @@ function WeekDayRow({ day, today }) {
   const isToday = day.day === today;
   const isPast = day.day < today;
   let status;
-  if (day.completed) status = <CircleCheck className="h-5 w-5 fill-brand-500 text-white" aria-label="Svolto" />;
-  else if (!day.session) status = <span className="text-xs text-ink-400">Riposo</span>;
-  else if (isPast) status = <span className="text-xs font-medium text-amber-600">Saltato</span>;
-  else status = <span className={`h-5 w-5 rounded-full border-2 ${isToday ? 'border-brand-500' : 'border-ink-300'}`} aria-label="Da fare" />;
+  if (day.completed) status = <CircleCheck className="h-5 w-5 fill-brand-500 text-white" aria-label={t('Svolto')} />;
+  else if (!day.session) status = <span className="text-xs text-ink-400">{t('Riposo')}</span>;
+  else if (isPast) status = <span className="text-xs font-medium text-amber-600">{t('Saltato')}</span>;
+  else status = <span className={`h-5 w-5 rounded-full border-2 ${isToday ? 'border-brand-500' : 'border-ink-300'}`} aria-label={t('Da fare')} />;
 
   return (
     <li className={`flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm ${isToday ? 'bg-brand-50' : ''}`}>
       <span className={`w-16 shrink-0 ${isToday ? 'font-semibold text-brand-800' : 'text-ink-500'}`}>
-        {isToday ? 'Oggi' : capitalize(fmtDayKey(day.day, { weekday: 'short', day: 'numeric' }).replace('.', ''))}
+        {isToday ? t('Oggi') : capitalize(fmtDayKey(day.day, { weekday: 'short', day: 'numeric' }).replace('.', ''))}
       </span>
       <span className={`min-w-0 flex-1 truncate ${day.session ? 'text-ink-900' : 'text-ink-400'}`}>{day.session ?? '—'}</span>
       {status}
@@ -333,7 +334,7 @@ function WeightCard({ trend }) {
 
   return (
     <Card className="p-5">
-      <CardHeader icon={ChartNoAxesColumn} title="Andamento del peso" action={<RangeTabs value={range} onChange={setRange} />} />
+      <CardHeader icon={ChartNoAxesColumn} title={t('Andamento del peso')} action={<RangeTabs value={range} onChange={setRange} />} />
       <div className="mt-2">
         <TrendChart data={data} />
       </div>
@@ -346,12 +347,12 @@ function ConsistencyCard({ rows }) {
   const data = useMemo(() => rows.slice(-RANGES.find((r) => r.key === range).weeks), [rows, range]);
   return (
     <Card className="p-5">
-      <CardHeader icon={Target} title="Costanza allenamenti" action={<RangeTabs value={range} onChange={setRange} />} />
+      <CardHeader icon={Target} title={t('Costanza allenamenti')} action={<RangeTabs value={range} onChange={setRange} />} />
       <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row">
         <div className="w-full min-w-0 flex-1">
           <ConsistencyChart data={data} />
         </div>
-        <ProgressRing value={totalPercent(data)} sublabel="Allenamenti completati" />
+        <ProgressRing value={totalPercent(data)} sublabel={t('Allenamenti completati')} />
       </div>
     </Card>
   );
@@ -362,13 +363,13 @@ function Professionals({ professionals, pending }) {
     <Card className="p-5">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-[17px] font-semibold">I tuoi professionisti</h2>
-          <p className="text-sm text-ink-500">Un team dedicato, sempre al tuo fianco nel tuo percorso.</p>
+          <h2 className="text-[17px] font-semibold">{t('I tuoi professionisti')}</h2>
+          <p className="text-sm text-ink-500">{t('Un team dedicato, sempre al tuo fianco nel tuo percorso.')}</p>
         </div>
-        <ArrowLink to="/app/professionisti">{pending > 0 ? `${pending} richieste in attesa` : 'Gestisci condivisione'}</ArrowLink>
+        <ArrowLink to="/app/professionisti">{pending > 0 ? `${pending} richieste in attesa` : t('Gestisci condivisione')}</ArrowLink>
       </header>
       {professionals.length === 0 ? (
-        <EmptyState title="Nessun professionista collegato" text="Quando un professionista ti aggiungerà, lo vedrai qui." />
+        <EmptyState title={t('Nessun professionista collegato')} text={t('Quando un professionista ti aggiungerà, lo vedrai qui.')} />
       ) : (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {professionals.map(({ linkId, role, professional }) => (
@@ -381,10 +382,10 @@ function Professionals({ professionals, pending }) {
               </div>
               <div className="flex gap-2 sm:flex-col">
                 <Link to={`/app/notifiche?con=${professional.id}`} className="btn-outline flex-1">
-                  <MessageCircle className="h-4 w-4" /> Messaggia
+                  <MessageCircle className="h-4 w-4" /> {t('Messaggia')}
                 </Link>
                 <Link to="/app/professionisti" className="btn-soft flex-1">
-                  Vedi profilo
+                  {t('Vedi profilo')}
                 </Link>
               </div>
             </article>

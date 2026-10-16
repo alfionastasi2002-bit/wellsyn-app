@@ -11,9 +11,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { t } from '../i18n/index.js';
 import { fmtDayKey, fmtNumber } from '../lib/format.js';
 
-const AXIS = { fontSize: 11, fill: '#8a94a6' };
+// Colori presi dal tema (chiaro o scuro)
+const AXIS = { fontSize: 11, fill: 'var(--color-ink-400)' };
 const monthLabel = (key) => {
   const label = fmtDayKey(key, { month: 'short' });
   return label[0].toUpperCase() + label.slice(1).replace('.', '');
@@ -34,11 +36,12 @@ function TooltipBox({ active, payload, unit, digits }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-card">
+    <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-card">
       <p className="font-semibold text-ink-900">
         {fmtNumber(p.value, digits)} {unit}
       </p>
       <p className="text-ink-500">{fmtDayKey(p.day, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+      {p.count > 1 && <p className="text-ink-500">{t('media di {n} clienti', { n: p.count })}</p>}
     </div>
   );
 }
@@ -48,11 +51,11 @@ function Callout({ viewBox, value, sub }) {
   const { x, y } = viewBox;
   return (
     <g transform={`translate(${Math.max(x - 84, 4)},${y - 56})`}>
-      <rect width="80" height="42" rx="8" fill="white" stroke="#e5ecea" />
-      <text x="40" y="18" textAnchor="middle" fontSize="13" fontWeight="600" fill="#172233">
+      <rect width="80" height="42" rx="8" fill="var(--color-surface)" stroke="var(--color-line)" />
+      <text x="40" y="18" textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--color-ink-900)">
         {value}
       </text>
-      <text x="40" y="33" textAnchor="middle" fontSize="10" fill="#667085">
+      <text x="40" y="33" textAnchor="middle" fontSize="10" fill="var(--color-ink-500)">
         {sub}
       </text>
     </g>
@@ -62,7 +65,7 @@ function Callout({ viewBox, value, sub }) {
 /** Grafico ad area (andamento del peso o di altre misure). data: [{ day, value }] */
 export function TrendChart({ data, unit = 'kg', digits = 1, height = 190 }) {
   if (!data.length) {
-    return <p className="grid h-[160px] place-items-center text-sm text-ink-500">Nessuna misurazione nel periodo.</p>;
+    return <p className="grid h-[160px] place-items-center text-sm text-ink-500">{t('Nessuna misurazione nel periodo.')}</p>;
   }
   const values = data.map((d) => d.value);
   const min = Math.floor(Math.min(...values) - 1);
@@ -78,7 +81,7 @@ export function TrendChart({ data, unit = 'kg', digits = 1, height = 190 }) {
             <stop offset="100%" stopColor="#35a08a" stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid vertical={false} stroke="#eef2f1" />
+        <CartesianGrid vertical={false} stroke="var(--color-muted)" />
         <XAxis
           dataKey="day"
           ticks={monthTicks(data.map((d) => d.day))}
@@ -88,15 +91,15 @@ export function TrendChart({ data, unit = 'kg', digits = 1, height = 190 }) {
           tickLine={false}
         />
         <YAxis domain={[min, max]} tick={AXIS} axisLine={false} tickLine={false} tickCount={4} />
-        <Tooltip content={<TooltipBox unit={unit} digits={digits} />} cursor={{ stroke: '#c4e7da' }} />
-        <Area type="monotone" dataKey="value" stroke="#1e8576" strokeWidth={2} fill="url(#trendFill)" dot={false} />
-        <ReferenceLine x={last.day} stroke="#97d4c0" strokeDasharray="3 3" />
+        <Tooltip content={<TooltipBox unit={unit} digits={digits} />} cursor={{ stroke: 'var(--color-brand-200)' }} />
+        <Area type="monotone" dataKey="value" stroke="var(--color-brand-600)" strokeWidth={2} fill="url(#trendFill)" dot={false} />
+        <ReferenceLine x={last.day} stroke="var(--color-brand-300)" strokeDasharray="3 3" />
         <ReferenceDot
           x={last.day}
           y={last.value}
           r={5}
-          fill="#0f5a53"
-          stroke="white"
+          fill="var(--color-primary)"
+          stroke="var(--color-surface)"
           strokeWidth={2}
           label={<Callout value={`${fmtNumber(last.value, digits)} ${unit}`} sub={fmtDayKey(last.day)} />}
         />
@@ -109,11 +112,9 @@ function ConsistencyTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-card">
-      <p className="font-semibold text-ink-900">{p.pct}% completati</p>
-      <p className="text-ink-500">
-        {p.completed} di {p.planned} · sett. del {fmtDayKey(p.week)}
-      </p>
+    <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-card">
+      <p className="font-semibold text-ink-900">{t('{n}% completati', { n: p.pct })}</p>
+      <p className="text-ink-500">{t('{done} di {planned} · sett. del {date}', { done: p.completed, planned: p.planned, date: fmtDayKey(p.week) })}</p>
     </div>
   );
 }
@@ -121,7 +122,7 @@ function ConsistencyTooltip({ active, payload }) {
 /** Barre settimanali della costanza negli allenamenti. data: [{ week, completed, planned }] */
 export function ConsistencyChart({ data, height = 170 }) {
   if (!data.length) {
-    return <p className="grid h-[150px] place-items-center text-sm text-ink-500">Nessun allenamento registrato.</p>;
+    return <p className="grid h-[150px] place-items-center text-sm text-ink-500">{t('Nessun allenamento registrato.')}</p>;
   }
   const rows = data.map((d) => {
     const pct = d.planned ? Math.round((d.completed / d.planned) * 100) : 0;
@@ -146,9 +147,9 @@ export function ConsistencyChart({ data, height = 170 }) {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip content={<ConsistencyTooltip />} cursor={{ fill: '#f1f6f4' }} />
+        <Tooltip content={<ConsistencyTooltip />} cursor={{ fill: 'var(--color-soft)' }} />
         <Bar dataKey="pct" stackId="a" fill="#35a08a" radius={[0, 0, 3, 3]} />
-        <Bar dataKey="rest" stackId="a" fill="#e6eeeb" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="rest" stackId="a" fill="var(--color-track)" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -61,6 +61,71 @@ router.get('/', async (req, res) => {
   });
 });
 
+// Riepilogo per le liste di clienti (Progressi, Attività fisica, Check nutrizionali).
+// Ogni dato rispetta il consenso: le informazioni degli altri professionisti solo con la condivisione attiva.
+router.get('/overview', async (req, res) => {
+  const me = req.user;
+  const today = dayKey();
+  const from28 = addDays(today, -27);
+  const links = await CareLink.find({ professional: me._id, status: 'active' }).sort({ createdAt: -1 }).populate('client').lean();
+  const ids = links.map((l) => l.client._id);
+  const sharedIds = new Set(links.filter((l) => l.sharedAccess).map((l) => String(l.client._id)));
+  const workoutVisible = (id) => me.role === 'trainer' || sharedIds.has(id);
+
+  const [checkins, workoutPlans, logs] = await Promise.all([
+    CheckIn.find({ client: { $in: ids }, date: { $gte: new Date(Date.now() - 366 * 86400000) } }).sort({ date: 1 }).lean(),
+    WorkoutPlan.find({ client: { $in: ids }, status: 'active', ...(me.role === 'trainer' && { trainer: me._id }) })
+      .sort({ updatedAt: -1 })
+      .lean(),
+    WorkoutLog.find({ client: { $in: ids }, day: { $gte: addDays(today, -60) } }).lean(),
+  ]);
+
+  const visibleCheck = (c, id) =>
+    String(c.professional) === String(me._id) || c.source === 'self' || (sharedIds.has(id) && c.source !== 'self');
+
+  res.json({
+    clients: links.map((l) => {
+      const id = String(l.client._id);
+      const own = checkins.filter((c) => String(c.client) === id && visibleCheck(c, id));
+      const weights = own.filter((c) => c.weightKg != null);
+      const nutritionChecks = sharedIds.has(id) || me.role === 'nutritionist'
+        ? own.filter((c) => c.source === 'nutritionist')
+        : [];
+      let workout = null;
+      if (workoutVisible(id)) {
+        const plan = workoutPlans.find((p) => String(p.client) === id);
+        const clientLogs = logs.filter((x) => String(x.client) === id);
+        const plannedDays = (plan?.sessions ?? []).map((s) => s.dayOfWeek).filter(Boolean);
+        const lastDay = clientLogs.filter((x) => x.completed).reduce((max, x) => (x.day > max ? x.day : max), '');
+        workout = {
+          planTitle: plan?.title ?? null,
+          sessionsPerWeek: plannedDays.length,
+          last28: adherence(clientLogs, plannedDays, from28, today),
+          lastWorkout: lastDay || null,
+        };
+      }
+      return {
+        linkId: String(l._id),
+        client: publicUser(l.client),
+        program: l.program ?? null,
+        sharedAccess: l.sharedAccess,
+        weight: weights.length
+          ? {
+              current: weights.at(-1).weightKg,
+              day: dayKey(weights.at(-1).date),
+              first: weights[0].weightKg,
+            }
+          : null,
+        lastCheck: own.length ? dayKey(own.at(-1).date) : null,
+        workout,
+        nutrition: nutritionChecks.length
+          ? { count: nutritionChecks.length, lastDay: dayKey(nutritionChecks.at(-1).date) }
+          : null,
+      };
+    }),
+  });
+});
+
 // Progressi di un cliente, filtrati in base a cosa può vedere questo professionista:
 // sempre i propri controlli e le pesate del cliente; i dati degli altri professionisti
 // (controlli o allenamenti) solo se il cliente ha autorizzato la condivisione.

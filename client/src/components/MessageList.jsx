@@ -3,18 +3,19 @@ import { Link } from 'react-router';
 import { relativeTime, displayName } from '../lib/format.js';
 import { Avatar } from './Avatar.jsx';
 import { ArrowLink, Card, CardHeader, EmptyState } from './ui.jsx';
+import { t } from '../i18n/index.js';
 
 export function MessageList({ messages, to = '/app/messaggi', className = '' }) {
   return (
     <Card className={`p-5 ${className}`}>
-      <CardHeader icon={MessageSquareText} title="Messaggi recenti" action={<ArrowLink to={to}>Vedi tutti</ArrowLink>} />
+      <CardHeader icon={MessageSquareText} title={t('Messaggi recenti')} action={<ArrowLink to={to}>{t('Vedi tutti')}</ArrowLink>} />
       {messages.length === 0 ? (
-        <EmptyState title="Nessun messaggio" text="Qui vedrai gli ultimi messaggi ricevuti." />
+        <EmptyState title={t('Nessun messaggio')} text={t('Qui vedrai gli ultimi messaggi ricevuti.')} />
       ) : (
         <ul className="mt-3 divide-y divide-line">
           {messages.map((m) => (
             <li key={m.id}>
-              <Link to={`${to}?con=${m.from.id}`} className="flex items-start gap-3 rounded-lg py-3 transition hover:bg-[#f7faf9]">
+              <Link to={`${to}?con=${m.from.id}`} className="flex items-start gap-3 rounded-lg py-3 transition hover:bg-soft">
               <Avatar user={m.from} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
@@ -23,7 +24,7 @@ export function MessageList({ messages, to = '/app/messaggi', className = '' }) 
                 </div>
                 <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-500">{m.text}</p>
               </div>
-              {m.unread && <span className="mt-6 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500" aria-label="Non letto" />}
+              {m.unread && <span className="mt-6 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500" aria-label={t('Non letto')} />}
               </Link>
             </li>
           ))}

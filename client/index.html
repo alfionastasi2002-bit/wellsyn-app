@@ -9,6 +9,15 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Wellsyn – Your wellness. Connected.</title>
+    <script>
+      // Tema e lingua salvati: applicati subito, prima che si carichi l'app (niente lampo bianco).
+      try {
+        var prefs = JSON.parse(localStorage.getItem('wellsyn.prefs') || '{}');
+        var dark = prefs.theme === 'dark' || (prefs.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+        if (prefs.language === 'en') document.documentElement.lang = 'en';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

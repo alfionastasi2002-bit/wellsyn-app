@@ -1,3 +1,5 @@
+import { translateMessage } from '../i18n/index.js';
+
 export const UNAUTHORIZED_EVENT = 'wellsyn:unauthorized';
 
 export class ApiError extends Error {
@@ -20,7 +22,7 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
     });
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    throw new ApiError(0, 'Impossibile contattare il server. Controlla la connessione.');
+    throw new ApiError(0, translateMessage('Impossibile contattare il server. Controlla la connessione.'));
   }
 
   if (res.status === 204) return null;
@@ -32,7 +34,8 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
     }
     const fallback =
       res.status >= 500 ? 'Il server non risponde in questo momento. Riprova tra qualche istante.' : 'Si è verificato un errore. Riprova.';
-    throw new ApiError(res.status, data?.error ?? fallback);
+    // I messaggi del server sono in italiano: qui vengono tradotti nella lingua scelta.
+    throw new ApiError(res.status, translateMessage(data?.error ?? fallback));
   }
   return data;
 }

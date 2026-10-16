@@ -10,6 +10,10 @@ const mealSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     kcal: Number,
+    // Macronutrienti in grammi (facoltativi)
+    protein: Number,
+    carbs: Number,
+    fat: Number,
   },
   { _id: false },
 );

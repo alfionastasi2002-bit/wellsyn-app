@@ -3,6 +3,7 @@ import {
   Bell,
   CalendarDays,
   ChartNoAxesColumn,
+  ClipboardList,
   Dumbbell,
   House,
   MessageSquareText,
@@ -11,40 +12,45 @@ import {
   Users,
   Utensils,
 } from 'lucide-react';
+import { localized } from './i18n/index.js';
 
 // Voci del menu laterale per ciascun ruolo.
 // "page" è la pagina da mostrare (vedi App.jsx); "badge" collega un contatore del menu.
-const settings = { path: 'impostazioni', label: 'Impostazioni', icon: Settings, page: 'settings' };
+const item = (path, label, icon, page, badge) => Object.assign(localized({ label }), { path, icon, page, badge });
+const settings = item('impostazioni', 'Profilo e impostazioni', Settings, 'settings');
+const agenda = item('agenda', 'Agenda', CalendarDays, 'agenda');
 
 export const NAVIGATION = {
   client: [
-    { path: '', label: 'Dashboard', icon: House, page: 'dashboard' },
-    { path: 'alimentazione', label: 'La mia alimentazione', icon: Utensils, page: 'clientNutrition' },
-    { path: 'allenamenti', label: 'I miei allenamenti', icon: Dumbbell, page: 'clientWorkouts' },
-    { path: 'progressi', label: 'Progressi', icon: ChartNoAxesColumn, page: 'clientProgress' },
-    { path: 'controlli', label: 'Controlli', icon: CalendarDays, page: 'clientChecks' },
-    { path: 'professionisti', label: 'Professionisti', icon: UserRound, page: 'team', badge: 'pendingRequests' },
-    { path: 'notifiche', label: 'Notifiche', icon: Bell, page: 'messages', badge: 'unreadMessages' },
+    item('', 'Dashboard', House, 'dashboard'),
+    item('alimentazione', 'La mia alimentazione', Utensils, 'clientNutrition'),
+    item('allenamenti', 'I miei allenamenti', Dumbbell, 'clientWorkouts'),
+    item('progressi', 'Progressi', ChartNoAxesColumn, 'clientProgress'),
+    agenda,
+    item('controlli', 'Controlli', ClipboardList, 'clientChecks'),
+    item('professionisti', 'Professionisti', UserRound, 'team', 'pendingRequests'),
+    item('notifiche', 'Notifiche', Bell, 'messages', 'unreadMessages'),
     settings,
   ],
   nutritionist: [
-    { path: '', label: 'Dashboard', icon: House, page: 'dashboard' },
-    { path: 'clienti', label: 'Clienti', icon: Users, page: 'clients' },
-    { path: 'piani-alimentari', label: 'Piani alimentari', icon: Utensils, page: 'mealPlans' },
-    { path: 'controlli', label: 'Controlli', icon: CalendarDays, page: 'agenda' },
-    { path: 'progressi', label: 'Progressi', icon: ChartNoAxesColumn, page: 'proProgress' },
-    { path: 'attivita-fisica', label: 'Attività fisica', icon: Dumbbell, page: 'sharedActivity' },
-    { path: 'messaggi', label: 'Messaggi', icon: MessageSquareText, page: 'messages', badge: 'unreadMessages' },
+    item('', 'Dashboard', House, 'dashboard'),
+    item('clienti', 'Clienti', Users, 'clients'),
+    item('piani-alimentari', 'Piani alimentari', Utensils, 'mealPlans'),
+    agenda,
+    item('controlli', 'Controlli', ClipboardList, 'checkins'),
+    item('progressi', 'Progressi', ChartNoAxesColumn, 'proProgress'),
+    item('attivita-fisica', 'Attività fisica', Dumbbell, 'sharedActivity'),
+    item('messaggi', 'Messaggi', MessageSquareText, 'messages', 'unreadMessages'),
     settings,
   ],
   trainer: [
-    { path: '', label: 'Dashboard', icon: House, page: 'dashboard' },
-    { path: 'clienti', label: 'Clienti', icon: Users, page: 'clients' },
-    { path: 'schede', label: 'Schede allenamento', icon: Dumbbell, page: 'workoutPlans' },
-    { path: 'sessioni', label: 'Sessioni', icon: CalendarDays, page: 'agenda' },
-    { path: 'progressi', label: 'Progressi', icon: ChartNoAxesColumn, page: 'proProgress' },
-    { path: 'check-nutrizionali', label: 'Check nutrizionali', icon: Apple, page: 'sharedNutrition' },
-    { path: 'messaggi', label: 'Messaggi', icon: MessageSquareText, page: 'messages', badge: 'unreadMessages' },
+    item('', 'Dashboard', House, 'dashboard'),
+    item('clienti', 'Clienti', Users, 'clients'),
+    item('schede', 'Schede allenamento', Dumbbell, 'workoutPlans'),
+    agenda,
+    item('progressi', 'Progressi', ChartNoAxesColumn, 'proProgress'),
+    item('check-nutrizionali', 'Check nutrizionali', Apple, 'sharedNutrition'),
+    item('messaggi', 'Messaggi', MessageSquareText, 'messages', 'unreadMessages'),
     settings,
   ],
 };

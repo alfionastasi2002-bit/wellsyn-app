@@ -7,6 +7,7 @@ import { Card, CardHeader, ErrorState, IconBadge, PageLoader } from '../../compo
 import { api } from '../../lib/api.js';
 import { todayKey } from '../../lib/format.js';
 import { useApi } from '../../lib/useApi.js';
+import { t } from '../../i18n/index.js';
 
 export default function ProgressPage() {
   const { data, error, loading, reload, setData } = useApi('/me/checkins');
@@ -24,35 +25,35 @@ export default function ProgressPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Progressi" subtitle="Il tuo percorso nel tempo: peso, misure e composizione corporea." />
+      <PageHeader title={t('Progressi')} subtitle={t('Il tuo percorso nel tempo: peso, misure e composizione corporea.')} />
 
       <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
         <IconBadge icon={Target} size="lg" />
         <div className="flex-1">
-          <p className="eyebrow">Obiettivo principale</p>
-          <p className="mt-1 font-semibold">{profile.goal ?? 'Non hai ancora indicato un obiettivo.'}</p>
+          <p className="eyebrow">{t('Obiettivo principale')}</p>
+          <p className="mt-1 font-semibold">{profile.goal ?? t('Non hai ancora indicato un obiettivo.')}</p>
         </div>
         <Link to="/app/impostazioni" className="btn-soft">
-          {profile.goal ? 'Modifica obiettivo' : 'Imposta obiettivo'}
+          {profile.goal ? t('Modifica obiettivo') : t('Imposta obiettivo')}
         </Link>
       </Card>
 
       <MetricTiles checkins={checkins} startWeight={profile.startWeightKg} />
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <MetricTrendCard title="Andamento del peso" icon={ChartNoAxesColumn} checkins={checkins} />
+        <MetricTrendCard title={t('Andamento del peso')} icon={ChartNoAxesColumn} checkins={checkins} />
         <WeighInCard onAdded={(checkin) => setData((d) => ({ ...d, checkins: [...d.checkins, checkin].sort((a, b) => a.day.localeCompare(b.day)) }))} />
       </div>
 
       {(hasComposition || hasMuscle) && (
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          {hasComposition && <MetricTrendCard title="Massa grassa" icon={Scale} checkins={checkins} metric="bodyFatPct" unit="%" defaultRange="6M" />}
-          {hasMuscle && <MetricTrendCard title="Massa muscolare" icon={Dumbbell} checkins={checkins} metric="muscleMassKg" unit="kg" defaultRange="6M" />}
+          {hasComposition && <MetricTrendCard title={t('Massa grassa')} icon={Scale} checkins={checkins} metric="bodyFatPct" unit="%" defaultRange="6M" />}
+          {hasMuscle && <MetricTrendCard title={t('Massa muscolare')} icon={Dumbbell} checkins={checkins} metric="muscleMassKg" unit="kg" defaultRange="6M" />}
         </div>
       )}
 
       <Card className="p-5">
-        <CardHeader icon={ClipboardList} title="Storico misurazioni" subtitle="Le tue pesate e i controlli dei tuoi professionisti" />
+        <CardHeader icon={ClipboardList} title={t('Storico misurazioni')} subtitle={t('Le tue pesate e i controlli dei tuoi professionisti')} />
         <div className="mt-4">
           <MeasurementsTable checkins={checkins} meLabel="Tu" canDelete={(c) => c.source === 'self'} onDelete={remove} />
         </div>
@@ -71,13 +72,13 @@ function WeighInCard({ onAdded }) {
     e.preventDefault();
     setError('');
     const weightKg = toNumber(form.weight);
-    if (weightKg == null || Number.isNaN(weightKg)) return setError('Inserisci il peso in kg (es. 64,5).');
+    if (weightKg == null || Number.isNaN(weightKg)) return setError(t('Inserisci il peso in kg (es. 64,5).'));
     setSaving(true);
     try {
       const { checkin } = await api('/me/checkins', { method: 'POST', body: { weightKg, day: form.day } });
       onAdded(checkin);
       setForm({ weight: '', day: todayKey() });
-      setFlash('Pesata registrata!');
+      setFlash(t('Pesata registrata!'));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,13 +88,13 @@ function WeighInCard({ onAdded }) {
 
   return (
     <Card className="p-5">
-      <CardHeader icon={Scale} title="Registra il tuo peso" subtitle="Pesati possibilmente alla stessa ora, a digiuno." />
+      <CardHeader icon={Scale} title={t('Registra il tuo peso')} subtitle={t('Pesati possibilmente alla stessa ora, a digiuno.')} />
       <form onSubmit={submit} className="mt-4 space-y-3" noValidate>
-        <NumberInput label="Peso" suffix="kg" placeholder="es. 64,5" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} />
-        <TextInput label="Data" type="date" max={todayKey()} value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} />
+        <NumberInput label={t('Peso')} suffix="kg" placeholder={t('es. 64,5')} value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} />
+        <TextInput label={t('Data')} type="date" max={todayKey()} value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} />
         {error && <p className="text-sm text-amber-700">{error}</p>}
         <Flash>{flash}</Flash>
-        <SaveButton saving={saving}>Salva pesata</SaveButton>
+        <SaveButton saving={saving}>{t('Salva pesata')}</SaveButton>
       </form>
     </Card>
   );

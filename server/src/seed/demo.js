@@ -156,10 +156,23 @@ export async function seedDemoData() {
       title: 'Dott.ssa',
       specialization: 'Biologa Nutrizionista',
       bio: 'Specializzata in alimentazione personalizzata e abitudini sostenibili.',
+      specialties: ['Nutrizione sportiva', 'Educazione alimentare', 'Ricomposizione corporea'],
+      yearsExperience: 9,
+      city: 'Milano',
+      studioAddress: 'Via Tortona 12, Milano',
+      onlineSessions: true,
+      workingHours: { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' },
+      appointmentMinutes: 45,
     }),
     person('Luca', 'Ferrari', 'trainer', {
       specialization: 'Personal Trainer',
       bio: 'Forza, mobilità e performance a lungo termine.',
+      specialties: ['Forza', 'Mobilità', 'Ricomposizione'],
+      yearsExperience: 7,
+      city: 'Milano',
+      studioAddress: 'Palestra Wellsyn, Viale Monza 40, Milano',
+      workingHours: { days: [1, 2, 3, 4, 5, 6], start: '08:00', end: '21:00' },
+      appointmentMinutes: 60,
     }),
     person('Giulia', 'Rossi', 'client', {
       goal: 'Aumentare la forza e sentirmi più energica',
@@ -351,7 +364,7 @@ export async function seedDemoData() {
         appointments.push({
           client: client._id,
           professional: luca._id,
-          date: zonedDate(day, 17 + (idx % 3), 0),
+          date: zonedDate(day, [9, 11, 17, 18, 19][idx], 0), // un orario diverso per cliente: niente sovrapposizioni
           kind: 'session',
           type: 'Sessione personal training',
           location: 'Palestra Wellsyn',

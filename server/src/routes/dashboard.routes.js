@@ -24,6 +24,7 @@ const plannedDaysOf = (plan) => (plan?.sessions ?? []).map((s) => s.dayOfWeek).f
 const serializeAppointment = (a) => ({
   id: String(a._id),
   date: a.date,
+  end: new Date(a.date.getTime() + (a.durationMin ?? 60) * 60000),
   durationMin: a.durationMin,
   kind: a.kind,
   type: a.type,
@@ -61,15 +62,6 @@ function sessionSummary(session) {
       exercises: session.exercises ?? [],
     }
   );
-}
-
-/** Ultimo controllo + quello precedente dello stesso cliente, per calcolare le differenze. */
-function latestWithPrevious(checkins) {
-  const latest = checkins.at(-1);
-  if (!latest) return null;
-  const sameClient = checkins.filter((c) => sameId(c.client, latest.client));
-  const previous = sameClient.at(-2);
-  return { latest, previous };
 }
 
 // CLIENTE
@@ -180,7 +172,6 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
     activePlans,
     newPlans,
     plansToReview,
-    featuredPlan,
     checkins,
     appointments,
     [messages, unread],
@@ -190,10 +181,10 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
     MealPlan.countDocuments({ nutritionist: me._id, status: 'active' }),
     MealPlan.countDocuments({ nutritionist: me._id, status: 'active', createdAt: { $gte: monthAgo } }),
     MealPlan.countDocuments({ nutritionist: me._id, needsReview: true, status: { $ne: 'archived' } }),
-    MealPlan.findOne({ nutritionist: me._id, status: 'active' }).sort({ updatedAt: -1 }).populate('client').lean(),
+    // Controlli della nutrizionista e pesate fatte dai clienti (come nella pagina Progressi)
     CheckIn.find({
       client: { $in: clientIds },
-      professional: me._id,
+      $or: [{ professional: me._id }, { source: 'self' }],
       date: { $gte: new Date(now.getTime() - 366 * DAY_MS) },
     })
       .sort({ date: 1 })
@@ -209,8 +200,9 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
     WorkoutLog.find({ client: { $in: sharedIds }, day: { $gte: addDays(today, -13) } }).lean(),
   ]);
 
+  // Stato "da seguire": nessun controllo della nutrizionista da più di 3 settimane
   const lastCheckByClient = new Map();
-  for (const c of checkins) lastCheckByClient.set(String(c.client), c);
+  for (const c of checkins) if (sameId(c.professional, me._id)) lastCheckByClient.set(String(c.client), c);
 
   const recentClients = links
     .map((l) => {
@@ -231,15 +223,6 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
         (b.lastCheck?.getTime() ?? 0) - (a.lastCheck?.getTime() ?? 0),
     )
     .slice(0, 6);
-
-  const last = latestWithPrevious(checkins);
-  const lastCheck = last && {
-    client: publicUser(links.find((l) => sameId(l.client._id, last.latest.client))?.client),
-    date: last.latest.date,
-    current: pickMetrics(last.latest),
-    previous: pickMetrics(last.previous),
-    notes: last.latest.notes ?? null,
-  };
 
   const trainerData = sharedLinks.map((l) => {
     const id = String(l.client._id);
@@ -273,15 +256,6 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
       plansToReview,
     },
     recentClients,
-    featuredPlan: featuredPlan && {
-      id: String(featuredPlan._id),
-      title: featuredPlan.title,
-      goal: featuredPlan.goal ?? null,
-      kcalTarget: featuredPlan.kcalTarget ?? null,
-      client: publicUser(featuredPlan.client),
-      day: featuredPlan.days?.[0] ?? null,
-    },
-    lastCheck,
     trend: {
       clients: links.map((l) => publicUser(l.client)),
       points: checkins.map((c) => ({
@@ -293,9 +267,10 @@ router.get('/nutritionist', requireRole('nutritionist'), async (req, res) => {
       })),
     },
     trainerData: { clients: trainerData, lockedCount: links.length - sharedLinks.length },
+    // Oggi (anche quelli già iniziati) e i prossimi
     appointments: appointments
-      .filter((a) => a.date >= now)
-      .slice(0, 4)
+      .filter((a) => dayKey(a.date) === today || a.date >= now)
+      .slice(0, 6)
       .map(serializeAppointment),
     messages: serializeMessages(messages),
   });

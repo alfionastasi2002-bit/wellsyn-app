@@ -8,9 +8,10 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../lib/api.js';
 import { capitalize, displayName, fmtDate, fmtTime, relativeTime, ROLE_LABELS } from '../../lib/format.js';
 import { useApi } from '../../lib/useApi.js';
+import { t } from '../../i18n/index.js';
 
 const relationLabel = (c) =>
-  c.relation === 'client' ? 'Cliente' : c.relation === 'colleague' ? `Collega · ${ROLE_LABELS[c.user.role]}` : ROLE_LABELS[c.user.role];
+  c.relation === 'client' ? t('Cliente') : c.relation === 'colleague' ? `${t('Collega')} · ${ROLE_LABELS[c.user.role]}` : ROLE_LABELS[c.user.role];
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -38,11 +39,11 @@ export default function MessagesPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title={user.role === 'client' ? 'Notifiche e messaggi' : 'Messaggi'}
+        title={user.role === 'client' ? t('Notifiche e messaggi') : t('Messaggi')}
         subtitle={
           user.role === 'client'
-            ? 'Scrivi ai tuoi professionisti e ricevi i loro aggiornamenti.'
-            : 'Conversazioni con i tuoi clienti e con i colleghi che seguono gli stessi clienti (se il cliente lo ha autorizzato).'
+            ? t('Scrivi ai tuoi professionisti e ricevi i loro aggiornamenti.')
+            : t('Conversazioni con i tuoi clienti e con i colleghi che seguono gli stessi clienti (se il cliente lo ha autorizzato).')
         }
       />
 
@@ -50,20 +51,22 @@ export default function MessagesPage() {
         <Link to="/app/professionisti" className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 hover:bg-amber-100/70">
           <Bell className="h-5 w-5 shrink-0" />
           <span className="flex-1">
-            {pending === 1 ? 'Hai 1 richiesta' : `Hai ${pending} richieste`} di collegamento da un professionista in attesa di risposta.
+            {pending === 1
+              ? t('Hai 1 richiesta di collegamento da un professionista in attesa di risposta.')
+              : t('Hai {n} richieste di collegamento da professionisti in attesa di risposta.', { n: pending })}
           </span>
-          <span className="font-semibold">Rispondi</span>
+          <span className="font-semibold">{t('Rispondi')}</span>
         </Link>
       )}
 
       <div className="card grid h-[calc(100dvh-230px)] min-h-[460px] grid-cols-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className={`min-h-0 flex-col border-line lg:flex lg:border-r ${selected ? 'hidden' : 'flex'}`}>
-          <p className="border-b border-line px-4 py-3 text-sm font-semibold">Conversazioni</p>
+          <p className="border-b border-line px-4 py-3 text-sm font-semibold">{t('Conversazioni')}</p>
           {list.length === 0 ? (
             <EmptyState
               icon={UserRound}
-              title="Nessun contatto"
-              text={user.role === 'client' ? 'Quando un professionista ti seguirà potrai scrivergli da qui.' : 'Aggiungi un cliente per iniziare a scrivergli.'}
+              title={t('Nessun contatto')}
+              text={user.role === 'client' ? t('Quando un professionista ti seguirà potrai scrivergli da qui.') : t('Aggiungi un cliente per iniziare a scrivergli.')}
             />
           ) : (
             <ul className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
@@ -72,7 +75,7 @@ export default function MessagesPage() {
                   <button
                     type="button"
                     onClick={() => select(c.user.id)}
-                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[#f4f8f7] ${c.user.id === selectedId ? 'bg-brand-50' : ''}`}
+                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-soft ${c.user.id === selectedId ? 'bg-brand-50' : ''}`}
                   >
                     <Avatar user={c.user} />
                     <span className="min-w-0 flex-1">
@@ -81,7 +84,7 @@ export default function MessagesPage() {
                         {c.lastMessage && <span className="shrink-0 text-[11px] text-ink-500">{relativeTime(c.lastMessage.createdAt)}</span>}
                       </span>
                       <span className="block truncate text-xs text-ink-500">
-                        {c.lastMessage ? `${c.lastMessage.mine ? 'Tu: ' : ''}${c.lastMessage.text}` : relationLabel(c)}
+                        {c.lastMessage ? `${c.lastMessage.mine ? `${t('Tu')}: ` : ''}${c.lastMessage.text}` : relationLabel(c)}
                       </span>
                     </span>
                     {c.unread > 0 && (
@@ -107,7 +110,7 @@ export default function MessagesPage() {
             />
           ) : (
             <div className="grid flex-1 place-items-center">
-              <EmptyState icon={MessageSquareText} title="Seleziona una conversazione" text="Scegli un contatto dall'elenco per leggere e inviare messaggi." />
+              <EmptyState icon={MessageSquareText} title={t('Seleziona una conversazione')} text={t("Scegli un contatto dall'elenco per leggere e inviare messaggi.")} />
             </div>
           )}
         </section>
@@ -172,7 +175,7 @@ function Thread({ contact, onBack, onActivity }) {
   return (
     <>
       <header className="flex items-center gap-3 border-b border-line px-4 py-3">
-        <button type="button" onClick={onBack} className="rounded-full p-1.5 text-ink-500 hover:bg-[#f1f5f4] lg:hidden" aria-label="Torna all'elenco">
+        <button type="button" onClick={onBack} className="rounded-full p-1.5 text-ink-500 hover:bg-hover lg:hidden" aria-label={t("Torna all'elenco")}>
           <ArrowLeft className="h-5 w-5" />
         </button>
         <Avatar user={contact.user} />
@@ -182,11 +185,11 @@ function Thread({ contact, onBack, onActivity }) {
         </div>
       </header>
 
-      <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8fbfa] px-4 py-4">
+      <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto bg-soft px-4 py-4">
         {loading && !data && <PageLoader />}
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && data.messages.length === 0 && (
-          <EmptyState title="Nessun messaggio" text={`Scrivi il primo messaggio a ${contact.user.firstName}.`} />
+          <EmptyState title={t('Nessun messaggio')} text={t('Scrivi il primo messaggio a {name}.', { name: contact.user.firstName })} />
         )}
         {grouped.map((g) => (
           <div key={g.day} className="space-y-2">
@@ -195,13 +198,13 @@ function Thread({ contact, onBack, onActivity }) {
               <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-card ${
-                    m.mine ? 'rounded-br-md bg-brand-800 text-white' : 'rounded-bl-md border border-line bg-white text-ink-900'
+                    m.mine ? 'rounded-br-md bg-primary text-white' : 'rounded-bl-md border border-line bg-surface text-ink-900'
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{m.text}</p>
                   <p className={`mt-1 text-right text-[10px] ${m.mine ? 'text-white/70' : 'text-ink-400'}`}>
                     {fmtTime(m.createdAt)}
-                    {m.mine && (m.readAt ? ' · Letto' : '')}
+                    {m.mine && (m.readAt ? ` · ${t('Letto')}` : '')}
                   </p>
                 </div>
               </div>
@@ -225,15 +228,15 @@ function Thread({ contact, onBack, onActivity }) {
             }}
             rows={1}
             maxLength={2000}
-            placeholder={`Scrivi a ${contact.user.firstName}…`}
-            aria-label="Messaggio"
+            placeholder={t('Scrivi a {name}…', { name: contact.user.firstName })}
+            aria-label={t('Messaggio')}
             className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line px-4 py-2.5 text-sm outline-none focus:border-brand-400"
           />
-          <button type="submit" className="btn-primary h-11 w-11 shrink-0 p-0" disabled={sending || !text.trim()} aria-label="Invia">
+          <button type="submit" className="btn-primary h-11 w-11 shrink-0 p-0" disabled={sending || !text.trim()} aria-label={t('Invia')}>
             {sending ? <Spinner className="h-4 w-4 text-white" /> : <SendHorizontal className="h-5 w-5" />}
           </button>
         </div>
-        <p className="mt-1 text-[11px] text-ink-400">Invio per mandare · Maiusc + Invio per andare a capo</p>
+        <p className="mt-1 text-[11px] text-ink-400">{t('Invio per mandare · Maiusc + Invio per andare a capo')}</p>
       </form>
     </>
   );

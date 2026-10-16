@@ -28,6 +28,29 @@
   --color-canvas: #f6f9f8;
   --color-mint: #e6f4ef;
 
+  /* Superfici: cambiano colore con il tema scuro (vedi .dark più sotto) */
+  --color-surface: #ffffff;
+  --color-soft: #f4f8f7;
+  --color-hover: #f1f5f4;
+  --color-muted: #eef2f1;
+  --color-track: #e8efed;
+  --color-primary: #0f5a53;
+  --color-primary-strong: #0b4642;
+  --color-danger: #d97706;
+  --color-danger-strong: #b45309;
+  --color-warm: #fdf3e7;
+  --color-warm-ink: #b8692a;
+  --color-glow-1: #f3faf7;
+  --color-glow-2: #e8f5f0;
+  --color-glow-3: #dcefe8;
+  --color-glow-4: #cfeadf;
+  --color-glow-5: #bfe3d5;
+  /* Secondo colore (es. sessioni del personal trainer nell'agenda del cliente) */
+  --color-iris-50: #eef0fd;
+  --color-iris-100: #e2e6fb;
+  --color-iris-500: #6170d9;
+  --color-iris-900: #27317a;
+
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03);
   --shadow-float: 0 12px 32px -12px rgb(15 90 83 / 0.25);
 }
@@ -35,10 +58,33 @@
 /* Varianti per l'altezza dello schermo (login e registrazione):
    short ≤ 820px (es. MacBook 13") · tiny ≤ 660px · roomy ≥ 960px (monitor grandi).
    L'ordine conta: "tiny" viene dopo "short" così, quando valgono entrambe, vince "tiny". */
+/* Tema scuro: classe "dark" sull'elemento <html> (la imposta PreferencesContext). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @custom-variant short (@media (max-height: 820px));
 @custom-variant tiny (@media (max-height: 660px));
 @custom-variant roomy (@media (min-height: 960px));
 
+
+/* Vetrina del login: il contenuto nuovo entra con una dissolvenza quando cambi profilo. */
+@keyframes showcase-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.showcase-enter {
+  animation: showcase-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .showcase-enter {
+    animation: none;
+  }
+}
 
 /* Scorrimento senza barra visibile (menu laterale). */
 @utility no-scrollbar {
@@ -46,6 +92,62 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Palette del tema scuro: stessi nomi, colori diversi. */
+.dark {
+  color-scheme: dark;
+  --color-canvas: #0d1315;
+  --color-surface: #141c1f;
+  --color-soft: #182226;
+  --color-hover: #1d282c;
+  --color-muted: #212d31;
+  --color-track: #27343a;
+  --color-line: #253136;
+  --color-mint: #10302b;
+
+  --color-ink-900: #e7eef0;
+  --color-ink-700: #c3cdd3;
+  --color-ink-500: #95a2ad;
+  --color-ink-400: #7c8896;
+  --color-ink-300: #56626e;
+
+  --color-brand-50: #0f2b27;
+  --color-brand-100: #13362f;
+  --color-brand-200: #1b4a42;
+  --color-brand-300: #2b6a5f;
+  --color-brand-700: #5cc3a9;
+  --color-brand-800: #7fd4bd;
+  --color-brand-900: #a8e4d4;
+  --color-brand-950: #cdf0e6;
+
+  --color-primary: #1e8576;
+  --color-primary-strong: #26998a;
+
+  --color-amber-50: #2c2110;
+  --color-amber-100: #3a2b13;
+  --color-amber-200: #5c431c;
+  --color-amber-400: #f2b04f;
+  --color-amber-500: #f2b04f;
+  --color-amber-600: #f3b45a;
+  --color-amber-700: #f5c070;
+  --color-amber-800: #f7cd8d;
+  --color-amber-900: #f9dcae;
+  --color-warm: #2c2110;
+  --color-warm-ink: #f0b46a;
+
+  --color-glow-1: #101c1d;
+  --color-glow-2: #12221f;
+  --color-glow-3: #142824;
+  --color-glow-4: #173a33;
+  --color-glow-5: #15342e;
+  --color-iris-50: #1b1f3d;
+  --color-iris-100: #232850;
+  --color-iris-500: #8592ee;
+  --color-iris-900: #ccd2f9;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 1px 3px rgb(0 0 0 / 0.25);
+  --shadow-float: 0 14px 34px -12px rgb(0 0 0 / 0.65);
 }
 
 @layer base {
@@ -67,16 +169,16 @@
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-line bg-white shadow-card;
+    @apply rounded-2xl border border-line bg-surface shadow-card;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-800 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-brand-600 bg-white px-4 py-2 text-sm font-medium text-brand-800 transition hover:bg-brand-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-brand-600 bg-surface px-4 py-2 text-sm font-medium text-brand-800 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-soft {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#eef2f1] px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-[#e3e9e7];
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-track disabled:cursor-not-allowed disabled:opacity-50;
   }
   .eyebrow {
     @apply text-[11px] font-semibold tracking-[0.22em] text-ink-700 uppercase;
@@ -85,6 +187,6 @@
     @apply inline-flex items-center gap-1 text-[13px] font-medium whitespace-nowrap text-brand-800 hover:underline;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-[15px] text-ink-900 transition outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100;
+    @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink-900 transition outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100;
   }
 }

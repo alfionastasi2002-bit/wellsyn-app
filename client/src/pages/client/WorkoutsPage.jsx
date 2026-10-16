@@ -21,6 +21,7 @@ import { api } from '../../lib/api.js';
 import { capitalize, displayName, fmtDayKey, relativeDay } from '../../lib/format.js';
 import { LEVEL_LABELS, WEEKDAYS } from '../../lib/labels.js';
 import { useApi } from '../../lib/useApi.js';
+import { t } from '../../i18n/index.js';
 
 export default function WorkoutsPage() {
   const { data, error, loading, reload, setData } = useApi('/me/workout-plan');
@@ -31,12 +32,12 @@ export default function WorkoutsPage() {
   if (!plan) {
     return (
       <div className="space-y-5">
-        <PageHeader title="I miei allenamenti" />
+        <PageHeader title={t('I miei allenamenti')} />
         <Card>
           <EmptyState
             icon={Dumbbell}
-            title="Nessuna scheda attiva"
-            text="Quando il tuo personal trainer ti assegnerà una scheda, troverai qui sessioni ed esercizi."
+            title={t('Nessuna scheda attiva')}
+            text={t('Quando il tuo personal trainer ti assegnerà una scheda, troverai qui sessioni ed esercizi.')}
           />
         </Card>
       </div>
@@ -57,7 +58,7 @@ export default function WorkoutsPage() {
           days: d.week.days.map((x) => (x.day === d.today ? { ...x, completed } : x)),
         },
         history: completed
-          ? [{ day: d.today, sessionName: todaySession?.name ?? 'Allenamento extra' }, ...d.history.filter((h) => h.day !== d.today)]
+          ? [{ day: d.today, sessionName: todaySession?.name ?? t('Allenamento extra') }, ...d.history.filter((h) => h.day !== d.today)]
           : d.history.filter((h) => h.day !== d.today),
       };
     });
@@ -66,8 +67,8 @@ export default function WorkoutsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="I miei allenamenti"
-        subtitle={`${plan.title} · ${LEVEL_LABELS[plan.level]} · Settimana ${plan.currentWeek} di ${plan.weeks}`}
+        title={t('I miei allenamenti')}
+        subtitle={`${plan.title} · ${LEVEL_LABELS[plan.level]} · ${t('Settimana {current} di {total}', { current: plan.currentWeek, total: plan.weeks })}`}
       />
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -76,7 +77,7 @@ export default function WorkoutsPage() {
       </div>
 
       <Card className="p-5">
-        <CardHeader icon={Dumbbell} title="La tua scheda" subtitle={`${plan.sessions.length} sessioni a settimana`} />
+        <CardHeader icon={Dumbbell} title={t('La tua scheda')} subtitle={t('{n} sessioni a settimana', { n: plan.sessions.length })} />
         <div className="mt-4 space-y-3">
           {plan.sessions.map((s) => (
             <SessionAccordion key={s.id} session={s} defaultOpen={s.dayOfWeek === data.todayWeekday} />
@@ -87,15 +88,15 @@ export default function WorkoutsPage() {
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <ConsistencyCard rows={data.consistency} />
         <Card className="p-5">
-          <CardHeader icon={History} title="Ultimi allenamenti" />
+          <CardHeader icon={History} title={t('Ultimi allenamenti')} />
           {data.history.length === 0 ? (
-            <EmptyState title="Ancora nessun allenamento registrato" />
+            <EmptyState title={t('Ancora nessun allenamento registrato')} />
           ) : (
             <ul className="mt-3 divide-y divide-line">
               {data.history.slice(0, 10).map((h) => (
                 <li key={h.day} className="flex items-center gap-3 py-2.5 text-sm">
                   <CircleCheck className="h-5 w-5 shrink-0 fill-brand-500 text-white" />
-                  <span className="min-w-0 flex-1 truncate font-medium">{h.sessionName ?? 'Allenamento'}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{h.sessionName ?? t('Allenamento')}</span>
                   <span className="shrink-0 text-ink-500">{relativeDay(h.day)}</span>
                 </li>
               ))}
@@ -108,16 +109,16 @@ export default function WorkoutsPage() {
 }
 
 function ExercisesTable({ exercises }) {
-  if (!exercises.length) return <p className="text-sm text-ink-500">Nessun esercizio indicato.</p>;
+  if (!exercises.length) return <p className="text-sm text-ink-500">{t('Nessun esercizio indicato.')}</p>;
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full min-w-[480px] text-sm">
         <thead>
           <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
-            <th className="pb-2 font-medium">Esercizio</th>
-            <th className="pb-2 text-center font-medium">Serie</th>
-            <th className="pb-2 text-center font-medium">Ripetizioni</th>
-            <th className="pb-2 text-right font-medium">Recupero</th>
+            <th className="pb-2 font-medium">{t('Esercizio')}</th>
+            <th className="pb-2 text-center font-medium">{t('Serie')}</th>
+            <th className="pb-2 text-center font-medium">{t('Ripetizioni')}</th>
+            <th className="pb-2 text-right font-medium">{t('Recupero')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -157,13 +158,13 @@ function TodayCard({ session, completed, onToggle, level }) {
 
   return (
     <Card className="flex flex-col p-5">
-      <CardHeader icon={Dumbbell} title="Allenamento di oggi" />
+      <CardHeader icon={Dumbbell} title={t('Allenamento di oggi')} />
       {!session ? (
         <div className="mt-4">
-          <p className="font-display text-xl font-semibold">Giorno di recupero</p>
-          <p className="mt-1 text-sm text-ink-700">Oggi non è prevista una sessione: il recupero fa parte del percorso.</p>
+          <p className="font-display text-xl font-semibold">{t('Giorno di recupero')}</p>
+          <p className="mt-1 text-sm text-ink-700">{t('Oggi non è prevista una sessione: il recupero fa parte del percorso.')}</p>
           <button type="button" className="btn-soft mt-4" disabled={saving} onClick={() => toggle(!completed)}>
-            {completed ? 'Annulla allenamento extra' : 'Ho fatto comunque un allenamento'}
+            {completed ? t('Annulla allenamento extra') : t('Ho fatto comunque un allenamento')}
           </button>
         </div>
       ) : (
@@ -193,15 +194,15 @@ function TodayCard({ session, completed, onToggle, level }) {
             {completed ? (
               <div className="flex items-center justify-between gap-3 rounded-full bg-brand-50 py-2 pr-2 pl-5">
                 <span className="inline-flex items-center gap-2 font-semibold text-brand-800">
-                  <CircleCheck className="h-5 w-5" /> Completato, ottimo lavoro!
+                  <CircleCheck className="h-5 w-5" /> {t('Completato, ottimo lavoro!')}
                 </span>
                 <button type="button" className="btn-soft" disabled={saving} onClick={() => toggle(false)}>
-                  {saving ? <Spinner className="h-4 w-4" /> : 'Annulla'}
+                  {saving ? <Spinner className="h-4 w-4" /> : t('Annulla')}
                 </button>
               </div>
             ) : (
               <button type="button" className="btn-primary w-full" disabled={saving} onClick={() => toggle(true)}>
-                {saving ? <Spinner className="h-5 w-5 text-white" /> : <CircleCheck className="h-5 w-5" />} Segna come completato
+                {saving ? <Spinner className="h-5 w-5 text-white" /> : <CircleCheck className="h-5 w-5" />} {t('Segna come completato')}
               </button>
             )}
           </div>
@@ -215,12 +216,12 @@ function TodayCard({ session, completed, onToggle, level }) {
 function WeekCard({ week, today, trainer }) {
   return (
     <Card className="p-5">
-      <CardHeader icon={CalendarCheck} title="Questa settimana" />
+      <CardHeader icon={CalendarCheck} title={t('Questa settimana')} />
       <p className="mt-4">
         <span className="font-display text-[32px] leading-none font-semibold">
           {week.completed} / {week.planned}
         </span>
-        <span className="ml-2 text-sm text-ink-500">completati</span>
+        <span className="ml-2 text-sm text-ink-500">{t('completati')}</span>
       </p>
       <ProgressBar value={week.completed} max={week.planned} className="mt-3" />
       <ul className="mt-4 space-y-1">
@@ -229,26 +230,26 @@ function WeekCard({ week, today, trainer }) {
           return (
             <li key={d.day} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm ${isToday ? 'bg-brand-50' : ''}`}>
               <span className={`w-16 shrink-0 ${isToday ? 'font-semibold text-brand-800' : 'text-ink-500'}`}>
-                {isToday ? 'Oggi' : capitalize(fmtDayKey(d.day, { weekday: 'short', day: 'numeric' }).replace('.', ''))}
+                {isToday ? t('Oggi') : capitalize(fmtDayKey(d.day, { weekday: 'short', day: 'numeric' }).replace('.', ''))}
               </span>
-              <span className={`min-w-0 flex-1 truncate ${d.session ? '' : 'text-ink-400'}`}>{d.session ?? 'Riposo'}</span>
+              <span className={`min-w-0 flex-1 truncate ${d.session ? '' : 'text-ink-400'}`}>{d.session ?? t('Riposo')}</span>
               {d.completed ? (
-                <CircleCheck className="h-5 w-5 fill-brand-500 text-white" aria-label="Svolto" />
+                <CircleCheck className="h-5 w-5 fill-brand-500 text-white" aria-label={t('Svolto')} />
               ) : d.session && d.day < today ? (
-                <span className="text-xs font-medium text-amber-600">Saltato</span>
+                <span className="text-xs font-medium text-amber-600">{t('Saltato')}</span>
               ) : null}
             </li>
           );
         })}
       </ul>
       {trainer && (
-        <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#f4f8f7] p-3">
+        <div className="mt-4 flex items-center gap-3 rounded-xl bg-soft p-3">
           <Avatar user={trainer} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{displayName(trainer)}</p>
-            <p className="text-xs text-ink-500">Il tuo personal trainer</p>
+            <p className="text-xs text-ink-500">{t('Il tuo personal trainer')}</p>
           </div>
-          <Link to={`/app/notifiche?con=${trainer.id}`} className="btn-outline px-3 py-1.5" aria-label="Scrivi al personal trainer">
+          <Link to={`/app/notifiche?con=${trainer.id}`} className="btn-outline px-3 py-1.5" aria-label={t('Scrivi al personal trainer')}>
             <MessageCircle className="h-4 w-4" />
           </Link>
         </div>
@@ -269,7 +270,7 @@ function SessionAccordion({ session, defaultOpen }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate font-semibold">{session.name}</span>
           <span className="block truncate text-xs text-ink-500">
-            {[session.focus, session.durationMin && `${session.durationMin} min`, `${session.exercises.length} esercizi`].filter(Boolean).join(' · ')}
+            {[session.focus, session.durationMin && `${session.durationMin} min`, t('{n} esercizi', { n: session.exercises.length })].filter(Boolean).join(' · ')}
           </span>
         </span>
         <ChevronDown className={`h-5 w-5 shrink-0 text-ink-400 transition ${open ? 'rotate-180' : ''}`} />
@@ -289,12 +290,12 @@ function ConsistencyCard({ rows }) {
   const data = useMemo(() => rows.slice(-RANGES.find((r) => r.key === range).weeks), [rows, range]);
   return (
     <Card className="p-5">
-      <CardHeader icon={ChartNoAxesColumn} title="La tua costanza" action={<RangeTabs value={range} onChange={setRange} />} />
+      <CardHeader icon={ChartNoAxesColumn} title={t('La tua costanza')} action={<RangeTabs value={range} onChange={setRange} />} />
       <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row">
         <div className="w-full min-w-0 flex-1">
           <ConsistencyChart data={data} />
         </div>
-        <ProgressRing value={totalPercent(data)} sublabel="Allenamenti completati" />
+        <ProgressRing value={totalPercent(data)} sublabel={t('Allenamenti completati')} />
       </div>
     </Card>
   );

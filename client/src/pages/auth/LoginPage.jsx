@@ -4,9 +4,16 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { LogoStacked } from '../../components/Logo.jsx';
 import { Spinner } from '../../components/ui.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { t, translateMessage } from '../../i18n/index.js';
 import { NAVIGATION } from '../../navigation.js';
 import { AuthShell } from './AuthShell.jsx';
 import { Field, FormError, PasswordField, RolePicker } from './fields.jsx';
+
+const SUBTITLES = {
+  client: 'Accedi al tuo spazio personale e continua il tuo percorso di benessere.',
+  nutritionist: 'Accedi per seguire i tuoi clienti, i loro piani alimentari e i controlli.',
+  trainer: 'Accedi per gestire schede, sessioni e progressi dei tuoi clienti.',
+};
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -30,26 +37,26 @@ export default function LoginPage() {
       const allowed = !section || section === 'supporto' || NAVIGATION[user.role].some((item) => item.path === section);
       navigate(from && allowed ? from : '/app', { replace: true });
     } catch (err) {
-      setError(err.message);
+      setError(translateMessage(err.message));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthShell>
+    <AuthShell role={role}>
       <div className="mx-auto w-full max-w-[460px] roomy:py-8">
         <LogoStacked imgClassName="h-14 short:h-10 tiny:h-8 roomy:h-16" />
-        <h1 className="mt-6 text-center font-display text-[28px] font-semibold short:mt-3 short:text-2xl tiny:mt-2 tiny:text-xl roomy:mt-8 roomy:text-[30px]">Bentornato su Wellsyn</h1>
-        <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">
-          Accedi al tuo spazio personale e continua il tuo percorso di benessere.
-        </p>
+        <h1 className="mt-6 text-center font-display text-[28px] font-semibold short:mt-3 short:text-2xl tiny:mt-2 tiny:text-xl roomy:mt-8 roomy:text-[30px]">
+          {t('Bentornato su Wellsyn')}
+        </h1>
+        <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">{t(SUBTITLES[role])}</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 short:mt-4 short:space-y-2.5 tiny:mt-3 tiny:space-y-2 roomy:mt-8 roomy:space-y-4" noValidate>
           <RolePicker value={role} onChange={setRole} />
           <Field
             icon={Mail}
-            label="Email"
+            label={t('Email')}
             type="email"
             name="email"
             autoComplete="email"
@@ -76,19 +83,18 @@ export default function LoginPage() {
                 checked={form.remember}
                 onChange={(e) => setForm({ ...form, remember: e.target.checked })}
               />
-              <span className="grid h-5 w-5 place-items-center rounded-md border-2 border-ink-300 text-white transition peer-checked:border-brand-800 peer-checked:bg-brand-800 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100">
+              <span className="grid h-5 w-5 place-items-center rounded-md border-2 border-ink-300 text-white transition peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100">
                 <Check className="h-3.5 w-3.5" strokeWidth={3} />
               </span>
-              Ricordami
+              {t('Ricordami')}
             </label>
             <button type="button" onClick={() => setShowForgot((v) => !v)} className="font-medium text-brand-800 underline underline-offset-4">
-              Password dimenticata?
+              {t('Password dimenticata?')}
             </button>
           </div>
           {showForgot && (
             <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
-              Il recupero automatico della password arriverà presto. Nel frattempo chiedi al tuo professionista di
-              reimpostarla o scrivi all'assistenza Wellsyn.
+              {t('Il recupero automatico della password arriverà presto. Nel frattempo chiedi al tuo professionista di reimpostarla o scrivi all’assistenza Wellsyn.')}
             </p>
           )}
 
@@ -96,18 +102,18 @@ export default function LoginPage() {
 
           <button type="submit" className="btn-primary w-full py-3.5 text-base short:py-3 tiny:py-2.5 roomy:py-4" disabled={loading}>
             {loading ? <Spinner className="h-5 w-5 text-white" /> : null}
-            Accedi <ChevronRight className="h-5 w-5" />
+            {t('Accedi')} <ChevronRight className="h-5 w-5" />
           </button>
         </form>
 
         <div className="my-5 flex items-center gap-4 text-sm text-ink-400 short:my-3 tiny:hidden roomy:my-7">
-          <span className="h-px flex-1 bg-line" /> oppure <span className="h-px flex-1 bg-line" />
+          <span className="h-px flex-1 bg-line" /> {t('oppure')} <span className="h-px flex-1 bg-line" />
         </div>
         <Link
           to="/registrati"
-          className="flex items-center justify-center gap-1 rounded-xl bg-[#f3f6f5] px-4 py-3.5 text-sm text-ink-700 transition hover:bg-[#eaf0ee] short:py-2.5 tiny:mt-3 tiny:py-2 roomy:py-4"
+          className="flex items-center justify-center gap-1 rounded-xl bg-soft px-4 py-3.5 text-sm text-ink-700 transition hover:bg-hover short:py-2.5 tiny:mt-3 tiny:py-2 roomy:py-4"
         >
-          Non hai un account? <span className="font-semibold text-brand-800">Richiedi l'accesso</span>
+          {t('Non hai un account?')} <span className="font-semibold text-brand-800">{t('Richiedi l’accesso')}</span>
           <ChevronRight className="h-4 w-4 text-brand-800" />
         </Link>
       </div>

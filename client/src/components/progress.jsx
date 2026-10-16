@@ -5,13 +5,15 @@ import { displayName, fmtDayKey, fmtNumber } from '../lib/format.js';
 import { TrendChart } from './charts.jsx';
 import { Card, CardHeader, Delta, EmptyState, RANGES, RangeTabs } from './ui.jsx';
 import { ConfirmButton } from './forms.jsx';
+import { localized, t } from '../i18n/index.js';
 
+const metric = (key, label, unit, goodWhen) => Object.assign(localized({ label }), { key, unit, goodWhen });
 export const METRICS = [
-  { key: 'weightKg', label: 'Peso', unit: 'kg', goodWhen: 'any' },
-  { key: 'waistCm', label: 'Vita', unit: 'cm', goodWhen: 'down' },
-  { key: 'hipsCm', label: 'Fianchi', unit: 'cm', goodWhen: 'down' },
-  { key: 'bodyFatPct', label: 'Massa grassa', unit: '%', goodWhen: 'down' },
-  { key: 'muscleMassKg', label: 'Massa muscolare', unit: 'kg', goodWhen: 'up' },
+  metric('weightKg', 'Peso', 'kg', 'any'),
+  metric('waistCm', 'Vita', 'cm', 'down'),
+  metric('hipsCm', 'Fianchi', 'cm', 'down'),
+  metric('bodyFatPct', 'Massa grassa', '%', 'down'),
+  metric('muscleMassKg', 'Massa muscolare', 'kg', 'up'),
 ];
 
 /** Ultimo valore, primo valore e variazione di una misura. checkins in ordine cronologico. */
@@ -54,23 +56,23 @@ export function MetricTiles({ checkins, startWeight }) {
   const weight = metricSummary(checkins, 'weightKg');
   const fromStart = weight.last != null && startWeight != null ? Math.round((weight.last - startWeight) * 10) / 10 : weight.changeFromStart;
   const tiles = [
-    { label: 'Peso attuale', value: weight.last, unit: 'kg', delta: fromStart, deltaLabel: "dall'inizio", goodWhen: 'any' },
+    { label: t('Peso attuale'), value: weight.last, unit: 'kg', delta: fromStart, deltaLabel: t("dall'inizio"), goodWhen: 'any' },
     ...METRICS.slice(1).map((m) => {
       const s = metricSummary(checkins, m.key);
-      return { label: m.label, value: s.last, unit: m.unit, delta: s.changeFromPrevious, deltaLabel: 'dal precedente', goodWhen: m.goodWhen };
+      return { label: m.label, value: s.last, unit: m.unit, delta: s.changeFromPrevious, deltaLabel: t('dal precedente'), goodWhen: m.goodWhen };
     }),
   ];
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-      {tiles.map((t) => (
-        <div key={t.label} className="card p-4">
-          <p className="text-xs font-medium text-ink-500">{t.label}</p>
+      {tiles.map((tile) => (
+        <div key={tile.label} className="card p-4">
+          <p className="text-xs font-medium text-ink-500">{tile.label}</p>
           <p className="mt-1 font-display text-2xl font-semibold">
-            {t.value == null ? '—' : fmtNumber(t.value)} {t.value != null && <span className="text-sm">{t.unit}</span>}
+            {tile.value == null ? '—' : fmtNumber(tile.value)} {tile.value != null && <span className="text-sm">{tile.unit}</span>}
           </p>
-          {t.delta != null && (
+          {tile.delta != null && (
             <p className="mt-0.5 text-xs text-ink-500">
-              <Delta value={t.delta} suffix={t.unit === '%' ? '%' : ` ${t.unit}`} goodWhen={t.goodWhen} /> {t.deltaLabel}
+              <Delta value={tile.delta} suffix={tile.unit === '%' ? '%' : ` ${tile.unit}`} goodWhen={tile.goodWhen} /> {tile.deltaLabel}
             </p>
           )}
         </div>
@@ -82,21 +84,21 @@ export function MetricTiles({ checkins, startWeight }) {
 /** Tabella di tutte le misurazioni (le più recenti in alto). */
 export function MeasurementsTable({ checkins, canDelete, onDelete, meLabel }) {
   const rows = [...checkins].reverse();
-  if (!rows.length) return <EmptyState title="Nessuna misurazione" text="Le misurazioni registrate compariranno qui." />;
+  if (!rows.length) return <EmptyState title={t('Nessuna misurazione')} text={t('Le misurazioni registrate compariranno qui.')} />;
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
-            <th className="pb-2 font-medium">Data</th>
-            <th className="pb-2 font-medium">Registrato da</th>
+            <th className="pb-2 font-medium">{t('Data')}</th>
+            <th className="pb-2 font-medium">{t('Registrato da')}</th>
             {METRICS.map((m) => (
               <th key={m.key} className="pb-2 text-right font-medium">
                 {m.label} ({m.unit})
               </th>
             ))}
             <th className="pb-2">
-              <span className="sr-only">Azioni</span>
+              <span className="sr-only">{t('Azioni')}</span>
             </th>
           </tr>
         </thead>
@@ -115,8 +117,8 @@ export function MeasurementsTable({ checkins, canDelete, onDelete, meLabel }) {
               ))}
               <td className="py-1.5 text-right">
                 {canDelete?.(c) && (
-                  <ConfirmButton className="rounded-full p-2 text-ink-400 hover:bg-[#f1f5f4] hover:text-ink-700" confirmLabel="Elimina" onConfirm={() => onDelete(c)}>
-                    <Trash2 className="h-4 w-4" aria-label="Elimina misurazione" />
+                  <ConfirmButton className="rounded-full p-2 text-ink-400 hover:bg-hover hover:text-ink-700" confirmLabel={t('Elimina')} onConfirm={() => onDelete(c)}>
+                    <Trash2 className="h-4 w-4" aria-label={t('Elimina misurazione')} />
                   </ConfirmButton>
                 )}
               </td>
@@ -136,8 +138,8 @@ export function OnOffGrid({ days }) {
         {days.map((d) => (
           <li
             key={d.day}
-            title={`${fmtDayKey(d.day, { weekday: 'long', day: 'numeric', month: 'long' })}: ${d.on ? 'allenamento svolto' : 'nessun allenamento'}`}
-            className={`flex h-10 flex-col items-center justify-center rounded-lg text-[11px] ${d.on ? 'bg-brand-500 font-semibold text-white' : 'bg-[#eef2f1] text-ink-500'}`}
+            title={`${fmtDayKey(d.day, { weekday: 'long', day: 'numeric', month: 'long' })}: ${d.on ? t('allenamento svolto') : t('nessun allenamento')}`}
+            className={`flex h-10 flex-col items-center justify-center rounded-lg text-[11px] ${d.on ? 'bg-brand-500 font-semibold text-white' : 'bg-muted text-ink-500'}`}
           >
             <span>{fmtDayKey(d.day, { day: 'numeric' })}</span>
             <span className="text-[9px] uppercase opacity-80">{fmtDayKey(d.day, { weekday: 'short' }).replace('.', '').slice(0, 3)}</span>
@@ -146,10 +148,10 @@ export function OnOffGrid({ days }) {
       </ol>
       <p className="mt-2 flex gap-4 text-xs text-ink-500">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-brand-500" /> Allenamento svolto
+          <span className="h-2.5 w-2.5 rounded-full bg-brand-500" /> {t('Allenamento svolto')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#dfe6e4]" /> Nessun allenamento
+          <span className="h-2.5 w-2.5 rounded-full bg-track" /> {t('Nessun allenamento')}
         </span>
       </p>
     </div>

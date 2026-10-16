@@ -1,12 +1,13 @@
 import { ArrowRight, CircleAlert, LoaderCircle } from 'lucide-react';
 import { Link } from 'react-router';
+import { locale, t, translateMessage } from '../i18n/index.js';
 
 /** Cerchio color menta con un'icona, usato nelle intestazioni delle card. */
 export function IconBadge({ icon: Icon, size = 'md', tone = 'brand' }) {
   const sizes = { sm: 'h-9 w-9 [&>svg]:h-4 [&>svg]:w-4', md: 'h-11 w-11 [&>svg]:h-5 [&>svg]:w-5', lg: 'h-14 w-14 [&>svg]:h-6 [&>svg]:w-6' };
   const tones = {
     brand: 'bg-brand-50 text-brand-700',
-    solid: 'bg-brand-700 text-white',
+    solid: 'bg-primary text-white',
     amber: 'bg-amber-50 text-amber-600',
   };
   return (
@@ -50,7 +51,7 @@ export function ProgressBar({ value, max = 100, className = '' }) {
   const pct = max ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
     <div
-      className={`h-2 overflow-hidden rounded-full bg-[#e8efed] ${className}`}
+      className={`h-2 overflow-hidden rounded-full bg-track ${className}`}
       role="progressbar"
       aria-valuenow={pct}
       aria-valuemin={0}
@@ -101,7 +102,7 @@ export const RANGES = [
 
 export function RangeTabs({ value, onChange }) {
   return (
-    <div className="flex gap-1" role="tablist" aria-label="Periodo">
+    <div className="flex gap-1" role="tablist" aria-label={t('Periodo')}>
       {RANGES.map((r) => (
         <button
           key={r.key}
@@ -110,10 +111,10 @@ export function RangeTabs({ value, onChange }) {
           aria-selected={value === r.key}
           onClick={() => onChange(r.key)}
           className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
-            value === r.key ? 'bg-brand-50 font-semibold text-brand-800' : 'text-ink-500 hover:bg-[#f1f5f4]'
+            value === r.key ? 'bg-brand-50 font-semibold text-brand-800' : 'text-ink-500 hover:bg-hover'
           }`}
         >
-          {r.label}
+          {t(r.label)}
         </button>
       ))}
     </div>
@@ -124,7 +125,7 @@ export function Spinner({ className = 'h-5 w-5' }) {
   return <LoaderCircle className={`animate-spin text-brand-600 ${className}`} aria-hidden="true" />;
 }
 
-export function PageLoader({ label = 'Caricamento…' }) {
+export function PageLoader({ label = t('Caricamento…') }) {
   return (
     <div className="grid min-h-[50vh] place-items-center" role="status">
       <div className="flex items-center gap-3 text-ink-500">
@@ -138,11 +139,11 @@ export function ErrorState({ error, onRetry }) {
   return (
     <div className="card mx-auto mt-10 max-w-lg p-8 text-center" role="alert">
       <CircleAlert className="mx-auto h-10 w-10 text-amber-500" />
-      <h2 className="mt-3 text-lg font-semibold">Qualcosa non ha funzionato</h2>
-      <p className="mt-1 text-sm text-ink-500">{error?.message ?? 'Errore sconosciuto.'}</p>
+      <h2 className="mt-3 text-lg font-semibold">{t('Qualcosa non ha funzionato')}</h2>
+      <p className="mt-1 text-sm text-ink-500">{error?.message ? translateMessage(error.message) : t('Errore sconosciuto.')}</p>
       {onRetry && (
         <button type="button" onClick={onRetry} className="btn-primary mt-5">
-          Riprova
+          {t('Riprova')}
         </button>
       )}
     </div>
@@ -165,7 +166,7 @@ export function Delta({ value, suffix = '', goodWhen = 'down', digits = 1, class
   if (value == null) return null;
   const good = goodWhen === 'any' || (goodWhen === 'down' ? value <= 0 : value >= 0);
   const sign = value > 0 ? '+' : value < 0 ? '-' : '';
-  const abs = new Intl.NumberFormat('it-IT', { maximumFractionDigits: digits }).format(Math.abs(value));
+  const abs = new Intl.NumberFormat(locale(), { maximumFractionDigits: digits }).format(Math.abs(value));
   return (
     <span className={`inline-flex items-center gap-0.5 font-semibold ${good ? 'text-brand-600' : 'text-amber-600'} ${className}`}>
       <span aria-hidden="true">{value < 0 ? '↓' : value > 0 ? '↑' : '•'}</span>

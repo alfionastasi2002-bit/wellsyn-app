@@ -8,7 +8,7 @@ import { greeting } from '../lib/format.js';
  */
 export function Hero({ firstName, title, subtitle, cta, image, imagePosition = 'center', aside }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#eef8f4] via-[#e3f3ed] to-[#d9efe7]">
+    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-glow-1 via-glow-2 to-glow-3">
       <div className="grid xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="relative min-h-[230px]">
           {image && (
@@ -39,7 +39,7 @@ export function Hero({ firstName, title, subtitle, cta, image, imagePosition = '
           </div>
         </div>
         {aside && (
-          <div className="relative z-10 border-t border-white/70 bg-white/35 px-6 py-6 backdrop-blur-sm xl:border-t-0 xl:border-l xl:border-l-brand-200/70 xl:bg-transparent xl:px-7 xl:backdrop-blur-none">
+          <div className="relative z-10 border-t border-surface/70 bg-surface/35 px-6 py-6 backdrop-blur-sm xl:border-t-0 xl:border-l xl:border-l-brand-200/70 xl:bg-transparent xl:px-7 xl:backdrop-blur-none">
             {aside}
           </div>
         )}

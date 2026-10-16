@@ -3,9 +3,9 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { clearAuthCookie, requireAuth, setAuthCookie } from '../middleware/auth.js';
-import { ROLES, User } from '../models/index.js';
+import { ACTIVITY_LEVELS, AVATAR_COLORS, COVER_STYLES, ROLES, User } from '../models/index.js';
 import { HttpError } from '../utils/httpError.js';
-import { optionalNumber, optionalText } from '../utils/schemas.js';
+import { dayKeySchema, optionalNumber, optionalText, timeSchema } from '../utils/schemas.js';
 import { parse } from '../utils/validate.js';
 
 const router = Router();
@@ -92,13 +92,60 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 const name = (label) => z.string({ error: 'Inserisci ' + label + '.' }).trim().min(1, 'Inserisci ' + label + '.').max(60);
+const tags = (max) =>
+  z
+    .array(z.string().trim().min(1).max(40, 'Ogni voce può avere al massimo 40 caratteri.'))
+    .max(max, `Massimo ${max} voci.`)
+    .transform((list) => [...new Set(list)]);
+// Foto profilo: immagine già ridotta dal browser (circa 256×256), salvata come data URL.
+const avatar = z
+  .string()
+  .max(350_000, "L'immagine è troppo grande: scegline una più leggera.")
+  .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Formato immagine non valido.')
+  .nullable()
+  .transform((v) => v || undefined);
+const workingHours = z
+  .object({
+    days: z.array(z.number().int().min(1).max(7)).max(7),
+    start: timeSchema,
+    end: timeSchema,
+  })
+  .refine((h) => h.end > h.start, "L'orario di fine lavoro deve essere dopo quello di inizio.");
+
 const PROFILE_FIELDS = {
-  common: { firstName: name('il nome'), lastName: name('il cognome'), phone: optionalText(30) },
-  professional: { title: optionalText(20), specialization: optionalText(80), bio: optionalText(280) },
+  common: {
+    firstName: name('il nome'),
+    lastName: name('il cognome'),
+    phone: optionalText(30),
+    city: optionalText(60),
+    birthDate: dayKeySchema.nullable().optional().transform((v) => v || undefined),
+    avatarUrl: avatar.optional(),
+    avatarColor: z.enum(AVATAR_COLORS).nullable().optional().transform((v) => v || undefined),
+    coverStyle: z.enum(COVER_STYLES).nullable().optional().transform((v) => v || undefined),
+    preferences: z.object({
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+      language: z.enum(['it', 'en']).optional(),
+    }),
+  },
+  professional: {
+    title: optionalText(20),
+    specialization: optionalText(80),
+    bio: optionalText(280),
+    specialties: tags(8),
+    yearsExperience: optionalNumber(0, 60, 'Anni di esperienza'),
+    studioAddress: optionalText(120),
+    onlineSessions: z.boolean().nullable().optional().transform((v) => v ?? undefined),
+    workingHours,
+    appointmentMinutes: optionalNumber(15, 240, 'Durata predefinita'),
+  },
   client: {
     goal: optionalText(140),
     heightCm: optionalNumber(100, 250, 'Altezza'),
     startWeightKg: optionalNumber(20, 400, 'Peso iniziale'),
+    targetWeightKg: optionalNumber(20, 400, 'Peso obiettivo'),
+    activityLevel: z.enum(ACTIVITY_LEVELS).nullable().optional().transform((v) => v || undefined),
+    dietPreferences: tags(10),
+    allergies: optionalText(200),
   },
 };
 
