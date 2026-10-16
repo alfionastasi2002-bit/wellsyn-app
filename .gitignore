@@ -1,0 +1,18 @@
+# Dipendenze
+node_modules/
+
+# Build
+client/dist/
+
+# Variabili d'ambiente (contengono password: MAI su GitHub)
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Log e file di sistema
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+/* Palette e font di Wellsyn (ricavati da logo e mockup). */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Outfit Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+
+  --color-brand-50: #eff8f5;
+  --color-brand-100: #e1f3ec;
+  --color-brand-200: #c4e7da;
+  --color-brand-300: #97d4c0;
+  --color-brand-400: #5fb9a1;
+  --color-brand-500: #35a08a;
+  --color-brand-600: #1e8576;
+  --color-brand-700: #146c62;
+  --color-brand-800: #0f5a53;
+  --color-brand-900: #0b4642;
+  --color-brand-950: #062e2b;
+
+  --color-ink-900: #172233;
+  --color-ink-700: #364152;
+  --color-ink-500: #667085;
+  --color-ink-400: #8a94a6;
+  --color-ink-300: #b8c0cc;
+
+  --color-line: #e5ecea;
+  --color-canvas: #f6f9f8;
+  --color-mint: #e6f4ef;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03);
+  --shadow-float: 0 12px 32px -12px rgb(15 90 83 / 0.25);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink-900 antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-white shadow-card;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-800 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-brand-600 bg-white px-4 py-2 text-sm font-medium text-brand-800 transition hover:bg-brand-50;
+  }
+  .btn-soft {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#eef2f1] px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-[#e3e9e7];
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold tracking-[0.22em] text-ink-700 uppercase;
+  }
+  .link-arrow {
+    @apply inline-flex items-center gap-1 text-[13px] font-medium whitespace-nowrap text-brand-800 hover:underline;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-[15px] text-ink-900 transition outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100;
+  }
+}

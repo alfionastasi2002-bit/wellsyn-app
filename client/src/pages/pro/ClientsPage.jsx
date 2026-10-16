@@ -1,0 +1,188 @@
+import { Copy, Lock, LockOpen, Mail, Plus, Target, UserPlus, UserRound, Users, X } from 'lucide-react';
+import { useState } from 'react';
+import { Avatar } from '../../components/Avatar.jsx';
+import { Card, CardHeader, EmptyState, ErrorState, PageLoader, Spinner } from '../../components/ui.jsx';
+import { api } from '../../lib/api.js';
+import { fmtDate, fmtNumber } from '../../lib/format.js';
+import { useApi } from '../../lib/useApi.js';
+import { Field, FormError } from '../auth/fields.jsx';
+
+export default function ClientsPage() {
+  const { data, error, loading, reload } = useApi('/clients');
+  const [showForm, setShowForm] = useState(false);
+  const [result, setResult] = useState(null);
+
+  if (loading && !data) return <PageLoader />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
+
+  const active = data.clients.filter((c) => c.status === 'active');
+  const pending = data.clients.filter((c) => c.status === 'pending');
+
+  return (
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-semibold">Clienti</h1>
+          <p className="text-sm text-ink-500">
+            {active.length} attivi{pending.length > 0 && ` · ${pending.length} in attesa di conferma`}
+          </p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => { setShowForm((v) => !v); setResult(null); }}>
+          {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showForm ? 'Chiudi' : 'Aggiungi cliente'}
+        </button>
+      </header>
+
+      {showForm && (
+        <AddClientForm
+          onDone={(res) => {
+            setResult(res);
+            setShowForm(false);
+            reload();
+          }}
+        />
+      )}
+      {result && <AddResult result={result} onClose={() => setResult(null)} />}
+
+      <Card className="p-5">
+        <CardHeader icon={Users} title="I tuoi clienti" subtitle="La condivisione dei dati con il resto del team la decide sempre il cliente." />
+        {data.clients.length === 0 ? (
+          <EmptyState icon={UserPlus} title="Nessun cliente ancora" text="Aggiungi il tuo primo cliente con il pulsante in alto." />
+        ) : (
+          <ul className="mt-4 divide-y divide-line">
+            {data.clients.map((c) => (
+              <ClientRow key={c.linkId} item={c} onRemoved={reload} />
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function ClientRow({ item, onRemoved }) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const { client } = item;
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await api(`/clients/${item.linkId}`, { method: 'DELETE' });
+      onRemoved();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <li className="flex flex-col gap-3 py-4 md:flex-row md:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Avatar user={client} size="lg" />
+        <div className="min-w-0">
+          <p className="font-semibold">{client.fullName}</p>
+          <p className="truncate text-sm text-ink-500">{client.email}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-xs md:w-[46%] md:justify-end">
+        {item.program && <span className="rounded-full bg-[#f1f5f4] px-3 py-1 text-ink-700">{item.program}</span>}
+        {item.status === 'pending' ? (
+          <span className="rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700">In attesa di conferma</span>
+        ) : item.sharedAccess ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 font-medium text-brand-800">
+            <LockOpen className="h-3.5 w-3.5" /> Dati di team condivisi
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#f1f5f4] px-3 py-1 text-ink-500">
+            <Lock className="h-3.5 w-3.5" /> Condivisione non autorizzata
+          </span>
+        )}
+        {item.lastCheck && (
+          <span className="text-ink-500">
+            Ultimo controllo {fmtDate(item.lastCheck.date, { day: 'numeric', month: 'short' })}
+            {item.lastCheck.weightKg != null && ` · ${fmtNumber(item.lastCheck.weightKg)} kg`}
+          </span>
+        )}
+      </div>
+      <div className="flex shrink-0 gap-2">
+        {confirming ? (
+          <>
+            <button type="button" className="btn-soft" onClick={() => setConfirming(false)}>Annulla</button>
+            <button type="button" className="btn-primary bg-amber-600 px-4 py-2 hover:bg-amber-700" disabled={busy} onClick={remove}>
+              {busy && <Spinner className="h-4 w-4 text-white" />} Conferma rimozione
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn-soft" onClick={() => setConfirming(true)}>
+            Rimuovi
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function AddClientForm({ onDone }) {
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', program: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  async function submit(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api('/clients', { method: 'POST', body: { ...form, program: form.program || undefined } });
+      onDone({ ...res, email: form.email });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <CardHeader icon={UserPlus} title="Aggiungi un cliente" subtitle="Se ha già un account Wellsyn riceverà una richiesta da accettare; altrimenti gli creiamo un account." />
+      <form onSubmit={submit} className="mt-4 grid gap-3 md:grid-cols-2" noValidate>
+        <Field icon={UserRound} label="Nome" required value={form.firstName} onChange={set('firstName')} />
+        <Field label="Cognome" required value={form.lastName} onChange={set('lastName')} />
+        <Field icon={Mail} label="Email" type="email" required value={form.email} onChange={set('email')} />
+        <Field icon={Target} label="Percorso (facoltativo)" placeholder="es. Definizione" value={form.program} onChange={set('program')} />
+        <div className="md:col-span-2">
+          <FormError>{error}</FormError>
+        </div>
+        <div className="md:col-span-2">
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading && <Spinner className="h-4 w-4 text-white" />} Aggiungi cliente
+          </button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+function AddResult({ result, onClose }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    await navigator.clipboard?.writeText(`Email: ${result.email}\nPassword temporanea: ${result.tempPassword}`);
+    setCopied(true);
+  }
+  return (
+    <div role="status" className="relative rounded-2xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-900">
+      <button type="button" onClick={onClose} className="absolute top-3 right-3 rounded-full p-1 hover:bg-white/60" aria-label="Chiudi">
+        <X className="h-4 w-4" />
+      </button>
+      <p className="font-semibold">{result.message}</p>
+      {result.tempPassword && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <code className="rounded-lg bg-white px-3 py-2 font-mono text-base">{result.tempPassword}</code>
+          <button type="button" className="btn-outline" onClick={copy}>
+            <Copy className="h-4 w-4" /> {copied ? 'Copiato!' : 'Copia credenziali'}
+          </button>
+          <p className="w-full text-xs text-brand-800">Questa password viene mostrata una sola volta: annotala e consegnala al cliente.</p>
+        </div>
+      )}
+    </div>
+  );
+}
