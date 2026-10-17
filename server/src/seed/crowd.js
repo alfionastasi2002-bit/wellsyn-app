@@ -2,6 +2,7 @@
 // Usato solo dal database di prova in memoria (npm run dev): non tocca il database online.
 import { Appointment, CareLink, CheckIn, MealPlan, Message, User, WorkoutLog, WorkoutPlan } from '../models/index.js';
 import { addDays, weekdayOf, zonedDate } from '../utils/dates.js';
+import { demoPlanFields } from './mealPlanDemo.js';
 
 const FIRST_NAMES = [
   'Alessandro', 'Francesca', 'Lorenzo', 'Sofia', 'Matteo', 'Aurora', 'Leonardo', 'Ginevra', 'Tommaso', 'Alice',
@@ -56,7 +57,7 @@ const MESSAGES_TO_PRO = [
  * Crea `count` clienti in più collegati alla nutrizionista e/o al personal trainer demo,
  * con controlli, pesate, piani, schede, allenamenti, appuntamenti (senza sovrapposizioni) e messaggi.
  */
-export async function seedCrowd({ count, elena, luca, passwordHash, random, today, daysAgo, SESSIONS, MENU, domain }) {
+export async function seedCrowd({ count, elena, luca, passwordHash, random, today, daysAgo, SESSIONS, domain }) {
   const pick = (list) => list[Math.floor(random() * list.length)];
   const between = (a, b) => a + random() * (b - a);
   const round1 = (n) => Math.round(n * 10) / 10;
@@ -141,19 +142,11 @@ export async function seedCrowd({ count, elena, luca, passwordHash, random, toda
       nutritionist: elena._id,
       title: `Piano ${r.profile.program.toLowerCase()}`,
       goal: r.profile.program,
-      kcalTarget,
-      guidelines: 'Bere almeno 2 litri di acqua al giorno. Verdura a volontà a pranzo e cena.',
+      ...demoPlanFields({ goal: r.profile.program, kcal: kcalTarget, offset: shift }),
       status: random() < 0.9 ? 'active' : 'draft',
       needsReview: random() < 0.25,
       startDate: daysAgo(Math.min(r.since, 60)),
       createdAt: daysAgo(Math.min(r.since, 60)),
-      days: Array.from({ length: 7 }, (_, i) => ({
-        dayIndex: i + 1,
-        meals: ['colazione', 'pranzo', 'cena'].map((type) => {
-          const [name, description, kcal] = MENU[type][(i + shift) % MENU[type].length];
-          return { type, name, description, kcal };
-        }),
-      })),
     });
   }
 

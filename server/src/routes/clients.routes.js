@@ -200,6 +200,34 @@ router.get('/:clientId/progress', async (req, res) => {
   });
 });
 
+// Scheda del cliente per chi prepara un piano: dati personali utili, preferenze e ultimo peso noto.
+router.get('/:clientId/profile', async (req, res) => {
+  const me = req.user;
+  const link = await requireClientOf(me, req.params.clientId);
+  const checkFilter = { client: link.client, weightKg: { $ne: null }, $or: [{ professional: me._id }, { source: 'self' }] };
+  if (link.sharedAccess) checkFilter.$or.push({ source: { $in: ['nutritionist', 'trainer'] } });
+  const [client, lastCheck] = await Promise.all([
+    User.findById(link.client).lean(),
+    CheckIn.findOne(checkFilter).sort({ date: -1 }).lean(),
+  ]);
+  res.json({
+    client: {
+      ...publicUser(client),
+      birthDate: client.birthDate ?? null,
+      heightCm: client.heightCm ?? null,
+      startWeightKg: client.startWeightKg ?? null,
+      targetWeightKg: client.targetWeightKg ?? null,
+      goal: client.goal ?? null,
+      activityLevel: client.activityLevel ?? null,
+      dietPreferences: client.dietPreferences ?? [],
+      allergies: client.allergies ?? null,
+      program: link.program ?? null,
+      weightKg: lastCheck?.weightKg ?? client.startWeightKg ?? null,
+      weightDate: lastCheck ? dayKey(lastCheck.date) : null,
+    },
+  });
+});
+
 router.post('/', async (req, res) => {
   const me = req.user;
   const data = parse(addClientSchema, req.body);

@@ -12,6 +12,7 @@ import {
 } from '../models/index.js';
 import { adherence, percent, weeklyConsistency } from '../services/stats.js';
 import { addDays, dayKey, daysBetween, weekdayOf, weekStart, zonedDate } from '../utils/dates.js';
+import { planDayFor } from '../utils/mealPlans.js';
 import { pickMetrics, publicUser, round1 } from '../utils/serialize.js';
 
 const router = Router();
@@ -99,8 +100,7 @@ router.get('/client', requireRole('client'), async (req, res) => {
   const thisWeek = adherence(workoutLogs, plannedDays, weekStart(today), addDays(weekStart(today), 6));
 
   // Pasti di oggi
-  const days = mealPlan?.days ?? [];
-  const mealDay = days.find((d) => d.dayIndex === weekday) ?? days[(weekday - 1) % (days.length || 1)];
+  const mealDay = mealPlan ? planDayFor(mealPlan, today) : null;
   const doneMeals = new Set(mealLogs.filter((l) => l.done).map((l) => l.mealType));
   const meals = (mealDay?.meals ?? []).map((m) => ({ ...m, done: doneMeals.has(m.type) }));
 

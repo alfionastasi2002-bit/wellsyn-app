@@ -11,7 +11,7 @@ export const ROLE_OPTIONS = [
 /** Selettore del profilo: Cliente / Nutrizionista / Personal Trainer. */
 export function RolePicker({ value, onChange }) {
   return (
-    <div role="radiogroup" aria-label={t('Tipo di profilo')} className="grid grid-cols-3 gap-1 rounded-2xl border border-line bg-surface p-1.5">
+    <div role="radiogroup" aria-label={t('Tipo di profilo')} className="flex gap-1 rounded-full border border-line bg-soft/70 p-1">
       {ROLE_OPTIONS.map(({ value: v, label, icon: Icon }) => (
         <button
           key={v}
@@ -19,11 +19,11 @@ export function RolePicker({ value, onChange }) {
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={`flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 short:py-1.5 text-xs font-medium transition sm:flex-row sm:gap-2 sm:text-sm tiny:py-1 tiny:text-xs ${
-            value === v ? 'bg-brand-50 text-brand-800' : 'text-ink-700 hover:bg-soft'
+          className={`flex flex-auto items-center justify-center gap-1.5 rounded-full px-2.5 py-2.5 text-[13px] font-medium whitespace-nowrap transition sm:gap-2 sm:px-3 sm:text-sm short:py-2 tiny:py-1.5 ${
+            value === v ? 'bg-surface text-brand-800 shadow-card ring-1 ring-brand-200' : 'text-ink-700 hover:bg-surface/70'
           }`}
         >
-          <Icon className={`h-5 w-5 shrink-0 tiny:hidden ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
+          <Icon className={`hidden h-4.5 w-4.5 shrink-0 min-[400px]:block ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
           <span className="leading-tight">{label}</span>
         </button>
       ))}
@@ -31,14 +31,27 @@ export function RolePicker({ value, onChange }) {
   );
 }
 
-/** Campo con icona a sinistra ed etichetta piccola sopra il valore (stile mockup). */
-export function Field({ icon: Icon, label, trailing, ...inputProps }) {
+/**
+ * Campo con icona a sinistra. Normale: etichetta piccola sopra il valore.
+ * pill: campo arrotondato con il solo segnaposto, come nel mockup del login (l'etichetta resta per i lettori di schermo).
+ */
+export function Field({ icon: Icon, label, trailing, pill = false, placeholder, ...inputProps }) {
+  if (pill) {
+    return (
+      <label className="flex items-center gap-3.5 rounded-full border border-line bg-soft/70 px-5 py-3.5 transition focus-within:border-brand-500 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100 short:py-3 tiny:py-2">
+        {Icon && <Icon className="h-5 w-5 shrink-0 text-ink-700" strokeWidth={1.8} />}
+        <span className="sr-only">{label}</span>
+        <input className="w-full min-w-0 bg-transparent text-[15px] text-ink-900 outline-none placeholder:text-ink-500" placeholder={placeholder ?? label} {...inputProps} />
+        {trailing}
+      </label>
+    );
+  }
   return (
     <label className="flex items-center gap-4 rounded-xl border border-line bg-surface px-4 py-2.5 short:py-1.5 tiny:py-1 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
       {Icon && <Icon className="h-5 w-5 shrink-0 text-ink-700" strokeWidth={1.8} />}
       <span className="min-w-0 flex-1">
         <span className="block text-xs text-ink-500">{label}</span>
-        <input className="w-full bg-transparent text-[15px] text-ink-900 outline-none placeholder:text-ink-300" {...inputProps} />
+        <input className="w-full bg-transparent text-[15px] text-ink-900 outline-none placeholder:text-ink-300" placeholder={placeholder} {...inputProps} />
       </span>
       {trailing}
     </label>
@@ -56,10 +69,10 @@ export function PasswordField({ icon, label, ...props }) {
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="rounded-full p-1.5 text-ink-500 hover:bg-hover"
+          className="-my-1 rounded-full p-1.5 text-ink-700 hover:bg-hover"
           aria-label={visible ? t('Nascondi password') : t('Mostra password')}
         >
-          {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          {visible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
         </button>
       }
       {...props}

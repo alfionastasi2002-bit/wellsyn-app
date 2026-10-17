@@ -45,6 +45,11 @@
   --color-glow-3: #dcefe8;
   --color-glow-4: #cfeadf;
   --color-glow-5: #bfe3d5;
+  /* Onde dello sfondo del login (dal chiaro allo scuro) */
+  --color-wave-1: #d6efe7;
+  --color-wave-2: #bce3d6;
+  --color-wave-3: #93d0bf;
+  --color-wave-4: #5fb5a0;
   /* Secondo colore (es. sessioni del personal trainer nell'agenda del cliente) */
   --color-iris-50: #eef0fd;
   --color-iris-100: #e2e6fb;
@@ -83,6 +88,119 @@
 @media (prefers-reduced-motion: reduce) {
   .showcase-enter {
     animation: none;
+  }
+}
+
+/* Testo formattato (introduzione dei piani alimentari): editor e visualizzazione. */
+.rich-text {
+  overflow-wrap: anywhere;
+}
+.rich-text > * + * {
+  margin-top: 0.65em;
+}
+.rich-text h2 {
+  font-family: var(--font-display);
+  font-size: 1.25em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.rich-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.08em;
+  font-weight: 600;
+}
+.rich-text ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.rich-text ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.rich-text li + li {
+  margin-top: 0.2em;
+}
+.rich-text li > p {
+  margin: 0;
+}
+.rich-text a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rich-text img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+.rich-text img.ProseMirror-selectednode {
+  outline: 3px solid var(--color-brand-400);
+}
+.rich-text blockquote {
+  border-left: 3px solid var(--color-brand-300);
+  padding-left: 0.9em;
+  color: var(--color-ink-700);
+}
+.rich-text table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.93em;
+}
+.rich-text th,
+.rich-text td {
+  border: 1px solid var(--color-line);
+  padding: 0.4em 0.6em;
+  vertical-align: top;
+  text-align: left;
+}
+.rich-text th {
+  background: var(--color-soft);
+  font-weight: 600;
+}
+.rich-text td > p,
+.rich-text th > p {
+  margin: 0;
+}
+.rich-text .selectedCell {
+  background: var(--color-brand-50);
+}
+.rich-text .tableWrapper {
+  overflow-x: auto;
+}
+
+/* Stampa / PDF dei piani alimentari: si vede solo la versione stampabile, sempre in tema chiaro. */
+.print-root {
+  display: none;
+}
+@media print {
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  .print-root {
+    display: block;
+    color-scheme: light;
+    background: #ffffff;
+    color: #172233;
+    --color-ink-900: #172233;
+    --color-ink-700: #364152;
+    --color-ink-500: #667085;
+    --color-ink-400: #8a94a6;
+    --color-line: #e5ecea;
+    --color-soft: #f4f8f7;
+    --color-surface: #ffffff;
+    --color-brand-50: #eff8f5;
+    --color-brand-300: #97d4c0;
+    --color-brand-700: #146c62;
+    --color-brand-800: #0f5a53;
+  }
+  @page {
+    margin: 14mm 14mm 16mm;
   }
 }
 
@@ -141,6 +259,10 @@
   --color-glow-3: #142824;
   --color-glow-4: #173a33;
   --color-glow-5: #15342e;
+  --color-wave-1: #133029;
+  --color-wave-2: #173d35;
+  --color-wave-3: #1c4d44;
+  --color-wave-4: #236357;
   --color-iris-50: #1b1f3d;
   --color-iris-100: #232850;
   --color-iris-500: #8592ee;

@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { CareLink, CheckIn, MEAL_TYPES, MealLog, MealPlan, Message, WorkoutLog, WorkoutPlan } from '../models/index.js';
 import { adherence, weeklyConsistency } from '../services/stats.js';
 import { addDays, dayKey, weekdayOf, weekStart, zonedDate } from '../utils/dates.js';
+import { planDayIndex } from '../utils/mealPlans.js';
 import { HttpError } from '../utils/httpError.js';
 import { dayKeySchema, optionalNumber } from '../utils/schemas.js';
 import { publicUser } from '../utils/serialize.js';
@@ -83,12 +84,19 @@ router.get('/meal-plan', requireRole('client'), async (req, res) => {
       title: plan.title,
       goal: plan.goal ?? null,
       kcalTarget: plan.kcalTarget ?? null,
+      proteinTarget: plan.proteinTarget ?? null,
+      carbsTarget: plan.carbsTarget ?? null,
+      fatTarget: plan.fatTarget ?? null,
+      waterLiters: plan.waterLiters ?? null,
+      notes: plan.notes ?? [],
+      intro: plan.intro ?? '',
       guidelines: plan.guidelines ?? '',
+      startDate: plan.startDate ? dayKey(plan.startDate) : null,
       updatedAt: plan.updatedAt,
       days: plan.days ?? [],
       nutritionist: publicUser(plan.nutritionist),
     },
-    todayIndex: weekdayOf(today),
+    todayIndex: plan ? planDayIndex(plan, today) : weekdayOf(today),
     todayDone: logs.map((l) => l.mealType),
   });
 });

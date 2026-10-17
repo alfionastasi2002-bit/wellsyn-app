@@ -17,6 +17,7 @@ import {
 } from '../models/index.js';
 import { addDays, dayKey, weekdayOf, zonedDate } from '../utils/dates.js';
 import { seedCrowd } from './crowd.js';
+import { demoPlanFields, giuliaPlanFields } from './mealPlanDemo.js';
 
 export const DEMO_PASSWORD = 'Wellsyn2026!';
 export const DEMO_DOMAIN = '@wellsyn.demo';
@@ -96,35 +97,6 @@ const SESSIONS = {
   },
 };
 
-const MENU = {
-  colazione: [
-    ["Porridge d'avena con frutti di bosco", 'Fiocchi di avena, latte parzialmente scremato, frutti di bosco e mandorle', 380],
-    ['Yogurt greco con granola', 'Yogurt greco 0%, granola senza zuccheri aggiunti e miele', 340],
-    ['Pane integrale con avocado e uovo', 'Pane di segale, avocado, uovo in camicia', 400],
-    ['Pancake proteici con frutta', 'Albumi, avena, banana e fragole fresche', 360],
-    ['Smoothie bowl', 'Banana, frutti rossi, semi di chia e cocco', 350],
-    ['Fette integrali con ricotta', 'Fette biscottate integrali, ricotta e marmellata senza zucchero', 320],
-    ['Omelette con spinaci', 'Due uova, spinaci, pane di segale tostato', 390],
-  ],
-  pranzo: [
-    ['Bowl di pollo grigliato', 'Petto di pollo alla griglia con quinoa e verdure di stagione', 560],
-    ['Insalata di farro e ceci', 'Farro, ceci, pomodorini, cetrioli e feta', 540],
-    ['Pasta integrale al pomodoro', 'Pasta integrale, pomodoro fresco, basilico e parmigiano', 580],
-    ['Riso venere con gamberi', 'Riso venere, gamberi, zucchine e lime', 550],
-    ['Burger di lenticchie', 'Burger di lenticchie con insalata mista e patate al forno', 570],
-    ['Poke di tonno', 'Riso, tonno fresco, edamame, avocado e sesamo', 590],
-    ['Couscous di verdure', 'Couscous integrale con verdure grigliate e feta', 530],
-  ],
-  cena: [
-    ['Salmone con quinoa e verdure', 'Filetto di salmone al forno, quinoa e verdure al vapore', 520],
-    ['Tacchino con patate al forno', 'Fesa di tacchino alla piastra con patate e rosmarino', 500],
-    ['Zuppa di legumi', 'Zuppa di legumi misti con crostini integrali', 460],
-    ['Merluzzo con broccoli', 'Merluzzo al forno con broccoli e olio a crudo', 430],
-    ['Frittata di verdure', 'Frittata al forno con zucchine e insalata', 450],
-    ['Tofu saltato con riso', 'Tofu, verdure saltate e riso basmati', 480],
-    ['Orata al cartoccio', 'Orata al cartoccio con verdure grigliate', 470],
-  ],
-};
 
 /**
  * Carica i dati demo. extraClients: quanti clienti in più generare (solo per il database di prova in locale).
@@ -182,6 +154,8 @@ export async function seedDemoData({ extraClients = 0 } = {}) {
       goal: 'Aumentare la forza e sentirmi più energica',
       startWeightKg: 66,
       heightCm: 168,
+      birthDate: '1998-03-14',
+      activityLevel: 'moderato',
     }),
     person('Marco', 'Bianchi', 'client', { goal: 'Aumentare la massa muscolare', startWeightKg: 74, heightCm: 180 }),
     person('Martina', 'Conti', 'client', { goal: 'Migliorare la composizione corporea', startWeightKg: 62.5 }),
@@ -267,33 +241,21 @@ export async function seedDemoData({ extraClients = 0 } = {}) {
   await WorkoutLog.insertMany(workoutLogs);
 
   // Piani alimentari (Elena)
-  const mealPlan = (client, title, goal, kcalTarget, extra = {}) => ({
+  const mealPlan = (client, title, goal, kcalTarget, extra = {}, fields = demoPlanFields({ goal, kcal: kcalTarget, offset: client.firstName.length })) => ({
     client: client._id,
     nutritionist: elena._id,
     title,
     goal,
-    kcalTarget,
-    guidelines: 'Obiettivi, linee guida e menù settimanale',
+    ...fields,
     startDate: daysAgo(40),
     createdAt: daysAgo(40),
-    days: Array.from({ length: 7 }, (_, i) => {
-      const dayIndex = i + 1;
-      const option = (dayIndex - weekday + 7) % 7; // oggi = opzione 0, come nel mockup
-      return {
-        dayIndex,
-        meals: ['colazione', 'pranzo', 'cena'].map((type) => {
-          const [name, description, kcal] = MENU[type][option];
-          return { type, name, description, kcal };
-        }),
-      };
-    }),
     ...extra,
   });
   for (const p of [
     mealPlan(andrea, 'Piano dimagrimento graduale', 'Dimagrimento', 1900, { needsReview: true, createdAt: daysAgo(10) }),
     mealPlan(martina, 'Piano ricomposizione', 'Ricomposizione', 1700, { needsReview: true }),
     mealPlan(marco, 'Piano massa pulita', 'Massa muscolare', 2800, { needsReview: true }),
-    mealPlan(giulia, 'Piano alimentare personalizzato', 'Definizione', 1750, { createdAt: daysAgo(5) }),
+    mealPlan(giulia, 'Piano alimentare personalizzato', 'Mantenimento', 1850, { createdAt: daysAgo(5) }, giuliaPlanFields()),
   ]) {
     await MealPlan.create(p);
   }
@@ -394,7 +356,7 @@ export async function seedDemoData({ extraClients = 0 } = {}) {
 
   // Clienti in più per vedere l'app "piena" (solo in locale)
   if (extraClients > 0) {
-    const crowd = await seedCrowd({ count: extraClients, elena, luca, passwordHash, random, today, daysAgo, SESSIONS, MENU, domain: DEMO_DOMAIN });
+    const crowd = await seedCrowd({ count: extraClients, elena, luca, passwordHash, random, today, daysAgo, SESSIONS, domain: DEMO_DOMAIN });
     console.log(`✓ Altri ${crowd.clients} clienti demo (${crowd.appointments} appuntamenti, ${crowd.workouts} allenamenti, ${crowd.checkins} controlli).`);
   }
 }

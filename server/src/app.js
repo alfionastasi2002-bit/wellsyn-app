@@ -18,7 +18,8 @@ const app = express();
 
 app.set('trust proxy', 1); // su Vercel le richieste passano da un proxy
 app.use(helmet());
-app.use(express.json({ limit: '1mb' }));
+// 2 MB: l'introduzione dei piani alimentari può contenere qualche immagine
+app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 
 // Controllo rapido: apri /api/health per sapere se il server vede il database.

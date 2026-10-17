@@ -1,41 +1,73 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { MEAL_TYPES, MealPlan } from '../models/index.js';
+import { FOOD_UNITS, MAX_PLAN_DAYS, MEAL_TYPES, MealPlan } from '../models/index.js';
 import { requireClientOf } from '../services/access.js';
 import { HttpError } from '../utils/httpError.js';
-import { dayKeySchema, objectId, optionalNumber, optionalText } from '../utils/schemas.js';
+import { dayKeySchema, objectId, optionalNumber, optionalText, timeSchema } from '../utils/schemas.js';
 import { publicUser } from '../utils/serialize.js';
 import { dayKey, zonedDate } from '../utils/dates.js';
+import { normalizeMeal, sanitizeIntro } from '../utils/mealPlans.js';
 import { parse } from '../utils/validate.js';
 
 // Piani alimentari: li crea e modifica la nutrizionista.
 const router = Router();
 router.use(requireAuth, requireRole('nutritionist'));
 
-const mealSchema = z.object({
-  type: z.enum(MEAL_TYPES, { error: 'Tipo di pasto non valido.' }),
-  name: z.string({ error: 'Ogni pasto deve avere un nome.' }).trim().min(1, 'Ogni pasto deve avere un nome.').max(120),
-  description: optionalText(400),
+const itemSchema = z.object({
+  name: z.string({ error: 'Ogni alimento deve avere un nome.' }).trim().min(1, 'Ogni alimento deve avere un nome.').max(80, 'Nome dell’alimento troppo lungo.'),
+  food: optionalText(40),
+  quantity: optionalNumber(0, 5000, 'Quantità'),
+  unit: z.enum(FOOD_UNITS, { error: 'Unità di misura non valida.' }).optional().nullable().transform((v) => v ?? undefined),
+  alternative: optionalText(120),
   kcal: optionalNumber(0, 5000, 'Calorie'),
   protein: optionalNumber(0, 500, 'Proteine'),
   carbs: optionalNumber(0, 800, 'Carboidrati'),
   fat: optionalNumber(0, 400, 'Grassi'),
 });
 
+const mealSchema = z
+  .object({
+    type: z.enum(MEAL_TYPES, { error: 'Tipo di pasto non valido.' }),
+    label: optionalText(40),
+    start: timeSchema.optional().nullable().transform((v) => v ?? undefined),
+    end: timeSchema.optional().nullable().transform((v) => v ?? undefined),
+    items: z.array(itemSchema).max(25, 'Massimo 25 alimenti per pasto.').default([]),
+    note: optionalText(300),
+    // Piani creati prima degli alimenti: il pasto è un piatto descritto a parole
+    name: optionalText(120),
+    description: optionalText(400),
+    kcal: optionalNumber(0, 5000, 'Calorie'),
+    protein: optionalNumber(0, 500, 'Proteine'),
+    carbs: optionalNumber(0, 800, 'Carboidrati'),
+    fat: optionalNumber(0, 400, 'Grassi'),
+  })
+  .refine((m) => m.items.length || m.name, { message: 'Ogni pasto deve avere almeno un alimento.' })
+  .refine((m) => !m.start || !m.end || m.end > m.start, { message: 'L’orario di fine del pasto deve venire dopo l’inizio.' });
+
 const daySchema = z.object({
-  dayIndex: z.number().int().min(1).max(7),
+  dayIndex: z.number().int().min(1).max(MAX_PLAN_DAYS),
   meals: z.array(mealSchema).max(10, 'Massimo 10 pasti al giorno.'),
 });
 
 const planFields = {
   title: z.string({ error: 'Dai un titolo al piano.' }).trim().min(1, 'Dai un titolo al piano.').max(100),
   goal: optionalText(60),
-  kcalTarget: optionalNumber(500, 6000, 'Obiettivo calorico'),
+  // L'introduzione (testo formattato, anche con immagini) viene ripulita prima del salvataggio
+  intro: z.string().max(1_200_000, 'Introduzione troppo lunga: usa meno immagini o immagini più piccole.').optional().nullable(),
   guidelines: optionalText(3000),
+  kcalTarget: optionalNumber(500, 6000, 'Obiettivo calorico'),
+  proteinTarget: optionalNumber(0, 500, 'Proteine'),
+  carbsTarget: optionalNumber(0, 900, 'Carboidrati'),
+  fatTarget: optionalNumber(0, 400, 'Grassi'),
+  waterLiters: optionalNumber(0.5, 6, 'Idratazione'),
+  notes: z.array(z.string().trim().min(1).max(160, 'Ogni nota può avere al massimo 160 caratteri.')).max(20, 'Massimo 20 note.').default([]),
   status: z.enum(['draft', 'active', 'archived']).default('active'),
   startDate: dayKeySchema.optional().nullable(),
-  days: z.array(daySchema).max(7),
+  days: z
+    .array(daySchema)
+    .max(MAX_PLAN_DAYS, `Al massimo ${MAX_PLAN_DAYS} giorni.`)
+    .refine((days) => new Set(days.map((d) => d.dayIndex)).size === days.length, 'Giorni del piano ripetuti.'),
 };
 
 const createSchema = z.object({ clientId: objectId('Seleziona un cliente.'), ...planFields });
@@ -55,23 +87,36 @@ const summary = (p) => ({
   client: publicUser(p.client),
   mealsCount: (p.days ?? []).reduce((n, d) => n + d.meals.length, 0),
   daysCount: (p.days ?? []).filter((d) => d.meals.length).length,
+  totalDays: (p.days ?? []).length,
   updatedAt: p.updatedAt,
   createdAt: p.createdAt,
 });
 
 const full = (p) => ({
   ...summary(p),
+  intro: p.intro ?? '',
   guidelines: p.guidelines ?? '',
+  proteinTarget: p.proteinTarget ?? null,
+  carbsTarget: p.carbsTarget ?? null,
+  fatTarget: p.fatTarget ?? null,
+  waterLiters: p.waterLiters ?? null,
+  notes: p.notes ?? [],
   startDate: p.startDate ? dayKey(p.startDate) : null,
   days: p.days ?? [],
 });
 
 function toDoc(data) {
-  const { startDate, ...rest } = data;
+  const { startDate, intro, ...rest } = data;
+  // I giorni vengono rinumerati 1…n nell'ordine ricevuto (si possono aggiungere e togliere)
+  const days = [...data.days].sort((a, b) => a.dayIndex - b.dayIndex).map((d, i) => ({ dayIndex: i + 1, meals: d.meals.map(normalizeMeal) }));
+  const cleanIntro = sanitizeIntro(intro);
   return {
     ...rest,
+    intro: cleanIntro || undefined,
+    // Con l'introduzione formattata le vecchie linee guida non servono più
+    guidelines: cleanIntro ? undefined : rest.guidelines,
     startDate: startDate ? zonedDate(startDate, 9) : undefined,
-    days: [...data.days].sort((a, b) => a.dayIndex - b.dayIndex),
+    days,
   };
 }
 

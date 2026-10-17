@@ -237,16 +237,19 @@ function TodayMeals({ meals, onToggle }) {
             </div>
           </div>
           <ul className="mt-3 space-y-1">
-            {meals.today.map((meal) => {
+            {meals.today.map((meal, i) => {
               const meta = MEAL_META[meal.type] ?? MEAL_META.pranzo;
               const MealIcon = meta.icon;
               return (
-                <li key={meal.type} className="flex items-center gap-3 rounded-xl px-1 py-2">
+                <li key={`${meal.type}-${i}`} className="flex items-center gap-3 rounded-xl px-1 py-2">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-warm text-warm-ink">
                     <MealIcon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">{meta.label}</p>
+                    <p className="text-sm font-semibold">
+                      {(meal.label && t(meal.label)) || meta.label}
+                      {meal.start && <span className="ml-1.5 text-xs font-normal text-ink-400">{meal.start}</span>}
+                    </p>
                     <p className="truncate text-[13px] text-ink-500">{meal.name}</p>
                   </div>
                   <button

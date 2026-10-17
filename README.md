@@ -34,6 +34,7 @@ Wellsyn/
 │       ├── routes/       # API (auth, dashboard, clienti, team, azioni del cliente)
 │       ├── middleware/   # controllo login/ruoli e gestione errori
 │       └── seed/         # dati dimostrativi
+├── shared/foods.js       # libreria di alimenti e ricette (usata dall'editor e dai dati demo)
 ├── vercel.json           # configurazione di Vercel
 └── .env.example          # modello delle variabili d'ambiente
 ```
@@ -83,8 +84,9 @@ con controlli, piani, schede, allenamenti e appuntamenti, per vedere l'app con t
 | GET/POST/DELETE | `/api/clients` | professionisti | elenco, aggiunta e rimozione clienti |
 | GET | `/api/clients/overview` | professionisti | riepilogo per le liste clienti (peso, allenamenti, check: in base al consenso) |
 | GET | `/api/clients/:id/progress` | professionisti | misure e allenamenti visibili (in base al consenso) |
+| GET | `/api/clients/:id/profile` | professionisti | dati del cliente per preparare un piano (età, altezza, ultimo peso, preferenze) |
 | GET/PATCH | `/api/team` | cliente | accetta professionisti e gestisce la condivisione |
-| GET/POST/PUT/PATCH/DELETE | `/api/meal-plans` | nutrizionista | piani alimentari |
+| GET/POST/PUT/PATCH/DELETE | `/api/meal-plans` | nutrizionista | piani alimentari (alimenti con quantità e alternative, orari, fabbisogni, note, introduzione formattata ripulita dal server) |
 | GET/POST/PUT/PATCH/DELETE | `/api/workout-plans` | personal trainer | schede di allenamento |
 | GET/POST/DELETE | `/api/checkins` | professionisti | controlli e misurazioni |
 | GET/POST/PUT/PATCH/DELETE | `/api/appointments` | tutti (modifica solo il professionista) | agenda: appuntamenti "dalle – alle", niente sovrapposizioni |
@@ -96,9 +98,9 @@ con controlli, piani, schede, allenamenti e appuntamenti, per vedere l'app con t
 ## Stato del progetto
 
 **Pronto:**
-- login e registrazione con ruoli, dashboard di Cliente / Nutrizionista / Personal Trainer;
-- cliente: alimentazione giorno per giorno (con macronutrienti), allenamenti e scheda, progressi con pesate, agenda, esito dei controlli, messaggi;
-- nutrizionista: editor dei piani alimentari (piatti suggeriti con calorie e macro, modelli, copia dei giorni, duplica piano), agenda, misurazioni, progressi dei clienti, attività fisica condivisa;
+- login e registrazione con ruoli (sfondo a onde; foto e schede cambiano con il profilo scelto), dashboard di Cliente / Nutrizionista / Personal Trainer;
+- cliente: alimentazione giorno per giorno (alimenti, quantità, alternative, orari, confronto con i fabbisogni, PDF), allenamenti e scheda, progressi con pesate, agenda, esito dei controlli, messaggi;
+- nutrizionista: editor dei piani alimentari come da mockup (cliente e obiettivo, introduzione con testo formattato, immagini e tabelle, giorni a schede fino a 14, pasti con orario riordinabili, alimenti e ricette suggeriti con calorie e macro calcolati, alternative e note, fabbisogni calcolabili dai dati del cliente, totale del giorno, bozza / pubblica, esporta PDF, modelli, copia e duplica), agenda, misurazioni, progressi dei clienti, attività fisica condivisa;
 - personal trainer: editor delle schede (esercizi suggeriti, sessioni modello, stima della durata, duplica scheda), agenda, progressi, check nutrizionali condivisi;
 - agenda per tutti i ruoli: vista settimana / mese / elenco, orari "dalle – alle", calendario per scegliere la data, nessuna sovrapposizione (né per il professionista né per il cliente), orario di lavoro e primo orario libero;
 - gestione clienti, richieste di collegamento e consenso alla condivisione;
@@ -108,5 +110,5 @@ con controlli, piani, schede, allenamenti e appuntamenti, per vedere l'app con t
 - layout responsive per computer, tablet e smartphone.
 
 **Prossimi passi possibili:** recupero password via email, notifiche email/push, promemoria degli appuntamenti,
-esportazione PDF di piani e schede, informativa privacy e consensi GDPR
+esportazione PDF delle schede di allenamento, accesso con Google, informativa privacy e consensi GDPR
 (i dati sanitari sono "categorie particolari").
