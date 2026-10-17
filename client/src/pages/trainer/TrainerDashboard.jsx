@@ -61,8 +61,7 @@ export default function TrainerDashboard() {
         title={t('Ottimo lavoro oggi!')}
         subtitle={t('I tuoi clienti stanno facendo progressi. Continua a guidarli verso i loro obiettivi.')}
         cta={{ label: t('Visualizza clienti'), to: '/app/clienti' }}
-        image="/images/hero-trainer.jpg"
-        imagePosition="50% 30%"
+        image="/images/dash-trainer.webp"
         aside={
           <div>
             <p className="eyebrow">{t('Panoramica di oggi')}</p>

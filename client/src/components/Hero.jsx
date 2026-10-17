@@ -2,35 +2,35 @@ import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router';
 import { greeting } from '../lib/format.js';
 
+// Fondo chiaro delle immagini dei banner: riempie lo spazio del testo su telefono.
+const PAPER = 'bg-[#f5f4f0]';
+
 /**
- * Banner di benvenuto in cima alle dashboard: testo a sinistra, foto al centro
- * e un pannello di riepilogo a destra.
+ * Banner di benvenuto in cima alle dashboard: l'immagine fa da sfondo (gli oggetti stanno a destra),
+ * il testo sta a sinistra sulla parte libera e il pannello di riepilogo a destra.
+ * Su telefono l'immagine scende in una fascia sotto il testo.
  */
-export function Hero({ firstName, title, subtitle, cta, image, imagePosition = 'center', aside }) {
+export function Hero({ firstName, title, subtitle, cta, image, imagePosition = 'right center', aside }) {
   return (
     <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-glow-1 via-glow-2 to-glow-3">
       <div className="grid xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="relative min-h-[230px]">
+        <div className={`relative overflow-hidden ${PAPER} dark:bg-glow-1 ${image ? 'pb-[150px] sm:pb-0' : ''} sm:min-h-[270px]`}>
           {image && (
             <img
               src={image}
               alt=""
-              className="absolute inset-y-0 right-0 hidden h-full w-[52%] object-cover sm:block"
-              style={{
-                objectPosition: imagePosition,
-                maskImage: 'linear-gradient(to right, transparent 0%, black 32%, black 82%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 32%, black 82%, transparent 100%)',
-              }}
+              className="absolute inset-x-0 bottom-0 h-[170px] w-full object-cover [mask-image:linear-gradient(to_bottom,transparent,black_35%)] sm:inset-y-0 sm:h-full sm:[mask-image:none] dark:opacity-55 dark:saturate-[1.15]"
+              style={{ objectPosition: imagePosition }}
             />
           )}
-          <div className="relative z-10 max-w-[560px] px-6 py-7 sm:px-8 sm:py-8">
+          {/* Velo a sinistra: il testo resta leggibile anche dove l'immagine è più piena */}
+          <div aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-[#f5f4f0]/85 via-[#f5f4f0]/20 via-45% to-transparent to-60% sm:block dark:from-glow-1 dark:via-glow-1/60" />
+          <div className="relative z-10 px-6 py-7 sm:max-w-[52%] sm:px-8 sm:py-8 xl:max-w-[50%]">
             <p className="eyebrow">
               {greeting()}, {firstName}
             </p>
-            <h1 className="mt-2 font-display text-[28px] leading-[1.1] font-bold text-ink-900 sm:max-w-[60%] sm:text-[38px] xl:max-w-none">
-              {title}
-            </h1>
-            <p className="mt-3 max-w-[360px] text-[15px] leading-relaxed text-ink-700 sm:text-base">{subtitle}</p>
+            <h1 className="mt-2 font-display text-[28px] leading-[1.1] font-bold text-ink-900 sm:text-[34px] 2xl:text-[38px]">{title}</h1>
+            <p className="mt-3 max-w-[380px] text-[15px] leading-relaxed text-ink-700 sm:text-base">{subtitle}</p>
             {cta && (
               <Link to={cta.to} className="btn-primary mt-5">
                 {cta.label} <ChevronRight className="h-4 w-4" />

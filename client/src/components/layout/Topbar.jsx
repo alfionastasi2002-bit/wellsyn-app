@@ -1,14 +1,13 @@
-import { Bell, ChevronDown, Languages, LifeBuoy, LogOut, Menu, Moon, Settings, Sun } from 'lucide-react';
+import { Bell, ChevronDown, LifeBuoy, LogOut, Menu, Monitor, Moon, Settings, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePreferences } from '../../context/PreferencesContext.jsx';
-import { t } from '../../i18n/index.js';
+import { LANGUAGES, t } from '../../i18n/index.js';
 import { displayName, ROLE_LABELS } from '../../lib/format.js';
 import { messagesPath } from '../../navigation.js';
 import { Avatar } from '../Avatar.jsx';
 import { LogoMark } from '../Logo.jsx';
-import { LanguageSwitch, ThemeToggle } from './PreferenceControls.jsx';
 import { QuickSearch } from './QuickSearch.jsx';
 
 export function Topbar({ onOpenMenu, unread }) {
@@ -30,7 +29,6 @@ export function Topbar({ onOpenMenu, unread }) {
     };
   }, [menuOpen]);
 
-  const dark = theme === 'dark' || (theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
   const menuItem = 'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink-700 hover:bg-brand-50';
 
   return (
@@ -50,8 +48,6 @@ export function Topbar({ onOpenMenu, unread }) {
       <QuickSearch role={user.role} />
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <LanguageSwitch className="hidden md:flex" />
-        <ThemeToggle className="hidden sm:block" />
         <Link
           to="/app/supporto"
           className="flex items-center gap-1.5 rounded-full p-2 text-ink-700 hover:bg-surface xl:px-3"
@@ -91,7 +87,7 @@ export function Topbar({ onOpenMenu, unread }) {
           </button>
 
           {menuOpen && (
-            <div role="menu" className="card absolute right-0 mt-2 w-60 overflow-hidden p-1.5 shadow-float">
+            <div role="menu" className="card absolute right-0 mt-2 w-72 overflow-hidden p-1.5 shadow-float">
               <div className="px-3 py-2 sm:hidden">
                 <p className="text-sm font-semibold">{displayName(user)}</p>
                 <p className="text-xs text-ink-500">{ROLE_LABELS[user.role]}</p>
@@ -99,17 +95,24 @@ export function Topbar({ onOpenMenu, unread }) {
               <Link role="menuitem" to="/app/impostazioni" onClick={() => setMenuOpen(false)} className={menuItem}>
                 <Settings className="h-4 w-4" /> {t('Il tuo profilo e impostazioni')}
               </Link>
-              <button role="menuitem" type="button" className={menuItem} onClick={() => savePreferences({ theme: dark ? 'light' : 'dark' })}>
-                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {dark ? t('Tema chiaro') : t('Tema scuro')}
-              </button>
-              <button
-                role="menuitem"
-                type="button"
-                className={menuItem}
-                onClick={() => savePreferences({ language: language === 'en' ? 'it' : 'en' })}
-              >
-                <Languages className="h-4 w-4" /> {language === 'en' ? t('Passa all’italiano') : t('Switch to English')}
-              </button>
+              {/* Lingua e tema si scelgono solo qui */}
+              <div className="my-1 h-px bg-line" />
+              <MenuChoice
+                label={t('Lingua')}
+                value={language}
+                onChange={(v) => savePreferences({ language: v })}
+                options={LANGUAGES.map((l) => ({ value: l.value, label: l.label }))}
+              />
+              <MenuChoice
+                label={t('Tema')}
+                value={theme}
+                onChange={(v) => savePreferences({ theme: v })}
+                options={[
+                  { value: 'light', label: t('Chiaro'), icon: Sun },
+                  { value: 'dark', label: t('Scuro'), icon: Moon },
+                  { value: 'system', label: t('Automatico'), icon: Monitor },
+                ]}
+              />
               <div className="my-1 h-px bg-line" />
               <button role="menuitem" type="button" onClick={logout} className={menuItem}>
                 <LogOut className="h-4 w-4" /> {t('Esci')}
@@ -119,5 +122,31 @@ export function Topbar({ onOpenMenu, unread }) {
         </div>
       </div>
     </header>
+  );
+}
+
+/** Scelta a pulsanti dentro il menu utente (lingua, tema): il menu resta aperto. */
+function MenuChoice({ label, value, onChange, options }) {
+  return (
+    <div className="px-3 py-1.5">
+      <p className="text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{label}</p>
+      <div role="radiogroup" aria-label={label} className="mt-1.5 flex gap-1 rounded-xl bg-soft p-1">
+        {options.map(({ value: v, label: optionLabel, icon: Icon }) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={value === v}
+            onClick={() => value !== v && onChange(v)}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-xs font-medium transition ${Icon ? 'flex-col' : ''} ${
+              value === v ? 'bg-surface text-brand-800 shadow-card' : 'text-ink-500 hover:text-ink-900'
+            }`}
+          >
+            {Icon && <Icon className="h-4 w-4 shrink-0" />}
+            <span className="max-w-full truncate">{optionLabel}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

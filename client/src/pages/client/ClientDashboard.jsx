@@ -52,8 +52,7 @@ export default function ClientDashboard() {
         title={t('Stai facendo un lavoro fantastico!')}
         subtitle={t('La costanza di oggi costruisce un domani più sano e felice.')}
         cta={{ label: t('Continua così'), to: '/app/allenamenti' }}
-        image="/images/hero-client.jpg"
-        imagePosition="40% 30%"
+        image="/images/dash-client.webp"
         aside={
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
             <div>

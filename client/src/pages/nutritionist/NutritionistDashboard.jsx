@@ -25,8 +25,7 @@ export default function NutritionistDashboard() {
         title={t('Oggi fai la differenza.')}
         subtitle={t('Clienti più consapevoli, più sani e più forti grazie al tuo supporto.')}
         cta={{ label: t('Visualizza agenda'), to: '/app/agenda' }}
-        image="/images/hero-nutritionist.jpg"
-        imagePosition="50% 25%"
+        image="/images/dash-nutritionist.webp"
         aside={
           <div>
             <p className="eyebrow">{t('Panoramica di oggi')}</p>
@@ -153,7 +152,8 @@ function Appointments({ appointments }) {
   const today = todayKey();
   const now = Date.now();
   const tomorrow = addDaysKey(today, 1);
-  const dayLabel = (day) => (day === today ? t('Oggi') : day === tomorrow ? t('Domani') : capitalize(fmtDayKey(day, { weekday: 'short', day: 'numeric', month: 'short' })));
+  // Etichetta corta su una sola riga: Oggi, Domani o la data (es. 19 ott)
+  const dayLabel = (day) => (day === today ? t('Oggi') : day === tomorrow ? t('Domani') : fmtDayKey(day, { day: 'numeric', month: 'short' }).replace('.', ''));
 
   return (
     <Card className="flex flex-col p-5">
@@ -180,9 +180,11 @@ function Appointments({ appointments }) {
                   to={`/app/agenda?giorno=${day}`}
                   className={`flex items-center gap-3 rounded-xl border p-3 transition hover:border-brand-300 ${live ? 'border-brand-400 bg-brand-50' : 'border-line'} ${past ? 'opacity-55' : ''}`}
                 >
-                  <span className="grid w-14 shrink-0 place-items-center rounded-lg bg-brand-50 py-1.5 text-brand-800">
-                    <span className="text-[10px] font-semibold uppercase">{dayLabel(day)}</span>
-                    <span className="font-display text-base leading-tight font-semibold">{fmtTime(a.date)}</span>
+                  <span
+                    className={`flex h-14 w-[76px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl text-center ${live ? 'bg-primary text-white' : 'bg-brand-50 text-brand-800'}`}
+                  >
+                    <span className="text-[10px] leading-none font-semibold tracking-wider whitespace-nowrap uppercase">{dayLabel(day)}</span>
+                    <span className="font-display text-[17px] leading-none font-semibold tabular-nums">{fmtTime(a.date)}</span>
                   </span>
                   <Avatar user={a.client} size="sm" />
                   <span className="min-w-0 flex-1">
