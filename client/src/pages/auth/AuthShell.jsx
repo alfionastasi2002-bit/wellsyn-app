@@ -5,14 +5,15 @@ import { t } from '../../i18n/index.js';
 /**
  * Cornice delle pagine di accesso (come nel mockup): sfondo con onde colorate, scheda con il modulo
  * a sinistra e la vetrina a destra. role: profilo scelto nel modulo; foto e schede della vetrina cambiano con lui.
- * Su telefono la vetrina scende sotto il modulo.
+ * Su telefono la vetrina scende sotto il modulo. La scheda non ha mai uno scorrimento interno:
+ * riempie lo schermo quando può e, se il contenuto è più alto, scorre la pagina intera.
  */
 export function AuthShell({ children, role = 'client' }) {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-glow-1 px-4 py-6 sm:p-6 lg:h-dvh lg:p-8 lg:short:p-5 tiny:p-3">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-glow-1 px-4 py-6 sm:p-6 lg:p-8 lg:short:p-5 tiny:p-3">
       <AuthWaves />
-      <div className="relative z-10 grid w-full max-w-[1220px] grid-cols-1 overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:h-full lg:max-h-[940px] lg:grid-cols-2 lg:bg-surface">
-        <div className="relative flex min-h-0 flex-col justify-center px-5 pt-14 pb-6 sm:px-12 sm:pb-10 lg:overflow-y-auto lg:px-12 lg:py-10 xl:px-16 short:py-5 tiny:py-3">
+      <div className="relative z-10 grid w-full max-w-[1220px] grid-cols-1 overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:min-h-[min(900px,calc(100dvh-4rem))] lg:grid-cols-2 lg:bg-surface lg:short:min-h-[calc(100dvh-2.5rem)]">
+        <div className="relative flex flex-col justify-center px-5 pt-14 pb-6 sm:px-12 sm:pb-10 lg:px-12 lg:py-10 xl:px-16 short:py-5 tiny:py-3">
           {/* Lingua e tema si possono scegliere anche prima di accedere */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1 sm:top-4 sm:right-4">
             <LanguageSwitch />
