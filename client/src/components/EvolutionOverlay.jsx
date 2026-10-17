@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { FIGURES } from './evolutionFigures.js';
 
 // Animazione d'ingresso dopo login e registrazione: su sfondo verde Wellsyn compare la "scala evolutiva",
-// dall'ominide che cammina a quattro zampe fino all'Homo sapiens, mentre la dashboard si carica dietro.
+// dall'Australopiteco all'Homo sapiens (sagome in evolutionFigures.js), mentre la dashboard si carica dietro.
 // Nessuna scritta: solo l'animazione (per i lettori di schermo resta un'etichetta nascosta).
 
 export const ENTRY_EVENT = 'wellsyn:entry';
@@ -15,37 +16,20 @@ const DURATION = 2700; // ms prima della dissolvenza finale
 const REDUCED_DURATION = 900;
 const FADE = 450;
 
-// Le cinque figure (coordinate in un riquadro 64×100, piedi a terra a y = 95):
-// anca, spalla, testa e, per gamba e braccio davanti (a) e dietro (b), ginocchio/gomito e piede/mano.
-const FIGURES = [
-  // Ominide che cammina sulle nocche
-  { hip: [15, 54], shoulder: [39, 47], head: [50, 42, 6.5], legA: [[21, 73], [19, 95]], legB: [[11, 74], [10, 95]], armA: [[44, 70], [46, 95]], armB: [[38, 71], [38, 95]] },
-  // Australopiteco: si alza, ancora curvo e con braccia lunghe
-  { hip: [24, 57], shoulder: [35, 31], head: [42.5, 22, 6.5], legA: [[30, 76], [28, 95]], legB: [[20, 77], [19, 95]], armA: [[42, 47], [47, 63]], armB: [[31, 49], [25, 62]] },
-  // Homo habilis
-  { hip: [27, 56], shoulder: [33.5, 28], head: [38.5, 17.5, 6.6], legA: [[32, 76], [32, 95]], legB: [[22, 76], [21, 95]], armA: [[40, 42], [46, 55]], armB: [[30, 43], [23, 55]] },
-  // Homo erectus
-  { hip: [29, 55], shoulder: [31.5, 26], head: [34, 13.5, 6.8], legA: [[34, 75], [35, 95]], legB: [[25, 75], [23, 95]], armA: [[38, 39], [44, 51]], armB: [[27, 40], [20, 51]] },
-  // Homo sapiens: completamente eretto
-  { hip: [31, 54], shoulder: [31, 24], head: [31, 11, 7.2], legA: [[35, 74], [37, 95]], legB: [[27, 74], [25, 95]], armA: [[37.5, 37], [43, 49]], armB: [[25.5, 37], [19, 48]] },
-];
-
-const path = (points) => points.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
 const origin = ([x, y]) => ({ transformOrigin: `${x}px ${y}px` });
 
+/** Una sagoma: arti "dietro" più trasparenti per dare profondità, arti davanti sopra il corpo. */
 function Figure({ figure: f, index }) {
   return (
-    <svg viewBox="0 0 64 100" className="evo-figure" style={{ '--i': index }} aria-hidden="true">
-      <g className="evo-body" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="6.5">
-        {/* Arti "dietro": un po' più trasparenti per dare profondità */}
+    <svg viewBox="18 0 54 120" className="evo-figure" style={{ '--i': index }} aria-hidden="true">
+      <g className="evo-body" fill="currentColor">
         <g opacity=".5">
-          <path className="evo-leg-b" style={origin(f.hip)} d={path([f.hip, ...f.legB])} />
-          <path className="evo-arm-b" style={origin(f.shoulder)} d={path([f.shoulder, ...f.armB])} strokeWidth="5.5" />
+          <path className="evo-leg-b" style={origin(f.hip)} d={f.legB} />
+          <path className="evo-arm-b" style={origin(f.shoulder)} d={f.armB} />
         </g>
-        <path d={path([f.hip, f.shoulder])} strokeWidth="9.5" />
-        <circle cx={f.head[0]} cy={f.head[1]} r={f.head[2]} fill="currentColor" stroke="none" />
-        <path className="evo-leg-a" style={origin(f.hip)} d={path([f.hip, ...f.legA])} />
-        <path className="evo-arm-a" style={origin(f.shoulder)} d={path([f.shoulder, ...f.armA])} strokeWidth="5.5" />
+        <path className="evo-leg-a" style={origin(f.hip)} d={f.legA} />
+        <path d={f.body} />
+        <path className="evo-arm-a" style={origin(f.shoulder)} d={f.armA} />
       </g>
     </svg>
   );

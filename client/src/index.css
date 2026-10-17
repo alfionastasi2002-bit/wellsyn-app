@@ -220,13 +220,13 @@
   animation: evo-overlay-out 0.45s ease-in forwards;
 }
 .evo-stage {
-  width: min(88vw, 640px);
+  width: min(94vw, 640px);
 }
 .evo-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 2%;
+  gap: 0;
 }
 .evo-figure {
   flex: 1 1 0;
@@ -249,21 +249,21 @@
   animation: evo-swing 0.9s ease-in-out infinite;
 }
 .evo-leg-a {
-  --evo-swing: 15deg;
+  --evo-swing: -14deg;
 }
 .evo-leg-b {
-  --evo-swing: -15deg;
+  --evo-swing: 14deg;
 }
 .evo-arm-a {
-  --evo-swing: -17deg;
+  --evo-swing: 15deg;
 }
 .evo-arm-b {
-  --evo-swing: 17deg;
+  --evo-swing: -15deg;
 }
 .evo-ground {
   position: relative;
   height: 3px;
-  margin-top: 6px;
+  margin-top: -2px;
   border-radius: 999px;
   background: rgb(234 247 242 / 0.18);
   overflow: hidden;
