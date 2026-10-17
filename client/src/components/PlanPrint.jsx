@@ -55,7 +55,7 @@ export function PlanPrint({ plan, people = {}, onDone }) {
   return createPortal(
     <div className="print-root text-[12px] leading-relaxed">
       <header className="flex items-end justify-between border-b-2 border-brand-700 pb-3">
-        <img src="/brand/logo-wordmark.png" alt="Wellsyn" className="h-9 w-auto" />
+        <img src="/brand/logo-wordmark.svg" alt="Wellsyn" className="h-9 w-auto" />
         <p className="text-right text-[11px] text-ink-500">{t('Generato il {date}', { date: fmtDate(new Date()) })}</p>
       </header>
 
