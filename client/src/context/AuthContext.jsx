@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { playEntryAnimation } from '../components/EvolutionOverlay.jsx';
 import { api, UNAUTHORIZED_EVENT } from '../lib/api.js';
 import { usePreferences } from './PreferencesContext.jsx';
 
@@ -37,6 +38,8 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (credentials) => {
       const data = await api('/auth/login', { method: 'POST', body: credentials });
+      // Animazione d'ingresso avviata insieme all'utente: copre il passaggio alla dashboard
+      playEntryAnimation();
       applyUser(data.user);
       return data.user;
     },
@@ -46,6 +49,7 @@ export function AuthProvider({ children }) {
   const register = useCallback(
     async (payload) => {
       const data = await api('/auth/register', { method: 'POST', body: payload });
+      playEntryAnimation();
       setUser(data.user);
       return data.user;
     },

@@ -1,5 +1,6 @@
 import { Fragment, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import { EvolutionOverlay } from './components/EvolutionOverlay.jsx';
 import { AppLayout } from './components/layout/AppLayout.jsx';
 import { PageLoader } from './components/ui.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -112,6 +113,8 @@ export default function App() {
           </LanguageBoundary>
         </AuthProvider>
       </BrowserRouter>
+      {/* Fuori dal cambio lingua: l'animazione d'ingresso non si interrompe se al login cambia la lingua */}
+      <EvolutionOverlay />
     </PreferencesProvider>
   );
 }

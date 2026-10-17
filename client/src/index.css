@@ -204,6 +204,136 @@
   }
 }
 
+/* Animazione d'ingresso dopo login e registrazione: la scala evolutiva su sfondo verde Wellsyn
+   (colori fissi: è sempre "il nostro verde", anche con il tema scuro). */
+.evo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 45%, #1e8576 0%, #0f5a53 48%, #0b4642 100%);
+  color: #eaf7f2;
+  animation: evo-overlay-in 0.25s ease-out both;
+}
+.evo-overlay-out {
+  animation: evo-overlay-out 0.45s ease-in forwards;
+}
+.evo-stage {
+  width: min(88vw, 640px);
+}
+.evo-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2%;
+}
+.evo-figure {
+  flex: 1 1 0;
+  min-width: 0;
+  height: auto;
+  overflow: visible;
+  opacity: 0;
+  /* ogni figura compare dopo la precedente e diventa via via più luminosa */
+  animation: evo-figure-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: calc(var(--i) * 0.38s + 0.15s);
+  --evo-alpha: calc(0.62 + var(--i) * 0.095);
+}
+.evo-body {
+  animation: evo-bob 0.45s ease-in-out infinite alternate;
+}
+.evo-leg-a,
+.evo-leg-b,
+.evo-arm-a,
+.evo-arm-b {
+  animation: evo-swing 0.9s ease-in-out infinite;
+}
+.evo-leg-a {
+  --evo-swing: 15deg;
+}
+.evo-leg-b {
+  --evo-swing: -15deg;
+}
+.evo-arm-a {
+  --evo-swing: -17deg;
+}
+.evo-arm-b {
+  --evo-swing: 17deg;
+}
+.evo-ground {
+  position: relative;
+  height: 3px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgb(234 247 242 / 0.18);
+  overflow: hidden;
+}
+.evo-progress {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #97d4c0;
+  transform-origin: left center;
+  animation: evo-progress 2.25s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+@keyframes evo-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes evo-overlay-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes evo-figure-in {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: var(--evo-alpha);
+    transform: translateX(0);
+  }
+}
+@keyframes evo-swing {
+  0%,
+  100% {
+    transform: rotate(var(--evo-swing));
+  }
+  50% {
+    transform: rotate(calc(var(--evo-swing) * -1));
+  }
+}
+@keyframes evo-bob {
+  to {
+    transform: translateY(-1.2px);
+  }
+}
+@keyframes evo-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .evo-figure {
+    animation: none;
+    opacity: var(--evo-alpha);
+  }
+  .evo-body,
+  .evo-leg-a,
+  .evo-leg-b,
+  .evo-arm-a,
+  .evo-arm-b,
+  .evo-progress {
+    animation: none;
+  }
+}
+
 /* Scorrimento senza barra visibile (menu laterale). */
 @utility no-scrollbar {
   scrollbar-width: none;
