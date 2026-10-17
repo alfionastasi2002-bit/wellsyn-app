@@ -220,13 +220,14 @@
   animation: evo-overlay-out 0.45s ease-in forwards;
 }
 .evo-stage {
-  width: min(94vw, 640px);
+  width: min(78vw, 300px);
 }
 .evo-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0;
+  /* un po' d'aria tra le figure: la lancia del Neanderthal non deve toccare i vicini */
+  gap: 2%;
 }
 .evo-figure {
   flex: 1 1 0;
@@ -308,7 +309,8 @@
 }
 @keyframes evo-bob {
   to {
-    transform: translateY(-1.2px);
+    /* in unità del disegno (riquadro 400×600) */
+    transform: translateY(-5px);
   }
 }
 @keyframes evo-progress {

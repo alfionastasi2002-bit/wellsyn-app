@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FIGURES } from './evolutionFigures.js';
+import { FIGURES, VIEWBOX } from './evolutionFigures.js';
 
 // Animazione d'ingresso dopo login e registrazione: su sfondo verde Wellsyn compare la "scala evolutiva",
 // dall'Australopiteco all'Homo sapiens (sagome in evolutionFigures.js), mentre la dashboard si carica dietro.
@@ -21,7 +21,7 @@ const origin = ([x, y]) => ({ transformOrigin: `${x}px ${y}px` });
 /** Una sagoma: arti "dietro" più trasparenti per dare profondità, arti davanti sopra il corpo. */
 function Figure({ figure: f, index }) {
   return (
-    <svg viewBox="18 0 54 120" className="evo-figure" style={{ '--i': index }} aria-hidden="true">
+    <svg viewBox={VIEWBOX} className="evo-figure" style={{ '--i': index }} aria-hidden="true">
       <g className="evo-body" fill="currentColor">
         <g opacity=".5">
           <path className="evo-leg-b" style={origin(f.hip)} d={f.legB} />
