@@ -1,27 +1,89 @@
 import { CalendarCheck, ChartNoAxesColumn, ChevronRight, ClipboardList, Dumbbell, PersonStanding, Share2, Utensils } from 'lucide-react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { LanguageSwitch, ThemeToggle } from '../../components/layout/PreferenceControls.jsx';
 import { t } from '../../i18n/index.js';
+
+const WIDE = '(min-width: 1024px)';
+// Su telefono e tablet la vetrina compare sotto il modulo solo se resta almeno questo spazio
+const MIN_SHOWCASE_HEIGHT = 270;
+
+/**
+ * La pagina occupa esattamente lo schermo, senza mai scorrere: se il modulo non ci sta
+ * viene rimpicciolito in proporzione (zoom), così non si taglia niente.
+ * Restituisce se c'è posto per la vetrina (sempre su computer; su telefono solo se avanza spazio).
+ */
+function useFitToScreen(cardRef, boxRef, contentRef) {
+  const [showcase, setShowcase] = useState(() => typeof window !== 'undefined' && window.matchMedia(WIDE).matches);
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    const box = boxRef.current;
+    const content = contentRef.current;
+    if (!card || !box || !content) return undefined;
+    const wide = window.matchMedia(WIDE);
+    let frame = 0;
+
+    const fit = () => {
+      content.style.zoom = '';
+      const style = getComputedStyle(box);
+      const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const natural = content.offsetHeight;
+      // Computer: il modulo ha tutta l'altezza della scheda. Telefono: la scheda intera, la vetrina usa ciò che avanza.
+      const available = (wide.matches ? box.clientHeight : card.clientHeight) - padding;
+      setShowcase(wide.matches || card.clientHeight - natural - padding >= MIN_SHOWCASE_HEIGHT);
+      if (available > 0 && natural > available + 0.5) content.style.zoom = String(Math.max(0.55, available / natural));
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    };
+
+    fit();
+    const observer = new ResizeObserver(schedule);
+    observer.observe(card);
+    observer.observe(content);
+    wide.addEventListener('change', schedule);
+    document.fonts?.ready.then(schedule);
+    return () => {
+      observer.disconnect();
+      wide.removeEventListener('change', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, [cardRef, boxRef, contentRef]);
+
+  return showcase;
+}
 
 /**
  * Cornice delle pagine di accesso (come nel mockup): sfondo con onde colorate, scheda con il modulo
  * a sinistra e la vetrina a destra. role: profilo scelto nel modulo; foto e schede della vetrina cambiano con lui.
- * Su telefono la vetrina scende sotto il modulo. La scheda non ha mai uno scorrimento interno:
- * riempie lo schermo quando può e, se il contenuto è più alto, scorre la pagina intera.
+ * Si adatta sempre all'altezza dello schermo: niente barre di scorrimento, né nella scheda né nella pagina.
  */
 export function AuthShell({ children, role = 'client' }) {
+  const cardRef = useRef(null);
+  const boxRef = useRef(null);
+  const contentRef = useRef(null);
+  const showcase = useFitToScreen(cardRef, boxRef, contentRef);
+
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-glow-1 px-4 py-6 sm:p-6 lg:p-8 lg:short:p-5 tiny:p-3">
+    <div className="relative flex h-dvh items-center justify-center overflow-hidden bg-glow-1 p-3 sm:p-6 lg:p-8 lg:short:p-5 tiny:p-3">
       <AuthWaves />
-      <div className="relative z-10 grid w-full max-w-[1220px] grid-cols-1 overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:min-h-[min(900px,calc(100dvh-4rem))] lg:grid-cols-2 lg:bg-surface lg:short:min-h-[calc(100dvh-2.5rem)]">
-        <div className="relative flex flex-col justify-center px-5 pt-14 pb-6 sm:px-12 sm:pb-10 lg:px-12 lg:py-10 xl:px-16 short:py-5 tiny:py-3">
+      <div
+        ref={cardRef}
+        className="relative z-10 flex h-full max-h-[940px] w-full max-w-[1220px] flex-col justify-center overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:bg-surface"
+      >
+        <div
+          ref={boxRef}
+          className={`relative flex min-h-0 flex-col justify-center overflow-hidden px-5 pt-14 pb-5 sm:px-12 sm:pb-8 lg:h-full lg:px-12 lg:py-10 xl:px-16 short:py-5 tiny:py-3 ${showcase ? 'flex-none' : 'flex-1'}`}
+        >
           {/* Lingua e tema si possono scegliere anche prima di accedere */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1 sm:top-4 sm:right-4">
             <LanguageSwitch />
             <ThemeToggle />
           </div>
-          {children}
+          <div ref={contentRef}>{children}</div>
         </div>
-        <Showcase role={role} />
+        {showcase && <Showcase role={role} />}
       </div>
     </div>
   );
@@ -101,7 +163,7 @@ const glass = 'rounded-2xl bg-surface/85 shadow-float backdrop-blur-md';
 function Showcase({ role }) {
   const content = SHOWCASE[role] ?? SHOWCASE.client;
   return (
-    <aside aria-hidden="true" className="relative mx-4 mb-4 h-[440px] overflow-hidden rounded-3xl bg-gradient-to-b from-glow-1 to-glow-3 sm:mx-6 sm:mb-6 sm:h-[520px] lg:m-0 lg:h-auto lg:rounded-none">
+    <aside aria-hidden="true" className="relative mx-3 mb-3 min-h-0 flex-1 overflow-hidden rounded-3xl bg-gradient-to-b from-glow-1 to-glow-3 sm:mx-6 sm:mb-6 lg:m-0 lg:h-full lg:rounded-none">
       <PanelWaves />
       {/* Le foto restano caricate: cambiando profilo si dissolvono l'una nell'altra */}
       {Object.entries(PHOTOS).map(([key, photo]) => (
