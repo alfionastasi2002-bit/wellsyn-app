@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <AuthShell role={role}>
       <div className="mx-auto w-full max-w-[470px] roomy:py-6">
-        <LogoStacked imgClassName="h-20 short:h-12 tiny:h-9 roomy:h-24" />
+        <LogoStacked imgClassName="h-40 short:h-24 tiny:h-17 roomy:h-46" />
         <h1 className="mt-6 text-center font-display text-[32px] font-semibold short:mt-3 short:text-[26px] tiny:mt-2 tiny:text-xl roomy:mt-8 roomy:text-[36px]">
           {t('Bentornato!')}
         </h1>

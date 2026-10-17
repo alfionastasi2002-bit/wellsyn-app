@@ -35,7 +35,7 @@ export default function RegisterPage() {
   return (
     <AuthShell role={form.role}>
       <div className="mx-auto w-full max-w-[470px]">
-        <LogoStacked imgClassName="h-14 short:h-10 tiny:h-7" />
+        <LogoStacked imgClassName="h-27 short:h-19 tiny:h-13" />
         <h1 className="mt-5 text-center font-display text-[30px] font-semibold short:mt-2 short:text-2xl tiny:mt-1 tiny:text-lg">{t('Crea il tuo account')}</h1>
         <p className="mt-2 text-center text-[15px] text-ink-500 short:mt-1 short:text-sm tiny:hidden">
           {isProfessional
