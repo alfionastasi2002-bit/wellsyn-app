@@ -11,8 +11,8 @@ export function AuthShell({ children, role = 'client' }) {
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-glow-1 px-4 py-6 sm:p-6 lg:h-dvh lg:p-8 lg:short:p-5 tiny:p-3">
       <AuthWaves />
-      <div className="relative z-10 grid w-full max-w-[1220px] overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:h-full lg:max-h-[940px] lg:grid-cols-2 lg:bg-surface">
-        <div className="relative flex min-h-0 flex-col justify-center px-5 pt-14 pb-6 sm:px-12 sm:pb-10 lg:overflow-y-auto lg:px-16 lg:py-10 short:py-5 tiny:py-3">
+      <div className="relative z-10 grid w-full max-w-[1220px] grid-cols-1 overflow-hidden rounded-[28px] bg-surface/90 shadow-[0_30px_80px_-30px_rgba(15,90,83,0.35)] ring-1 ring-surface/60 backdrop-blur-sm lg:h-full lg:max-h-[940px] lg:grid-cols-2 lg:bg-surface">
+        <div className="relative flex min-h-0 flex-col justify-center px-5 pt-14 pb-6 sm:px-12 sm:pb-10 lg:overflow-y-auto lg:px-12 lg:py-10 xl:px-16 short:py-5 tiny:py-3">
           {/* Lingua e tema si possono scegliere anche prima di accedere */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1 sm:top-4 sm:right-4">
             <LanguageSwitch />
@@ -82,18 +82,23 @@ function PanelWaves() {
 
 // Vetrina
 
-// cover: la foto riempie tutta la vetrina; band: foto più piccola in alto che sfuma nelle onde.
+// cover: la foto riempie tutta la vetrina; band: foto più piccola in alto a sinistra che sfuma nelle onde
+// (la persona resta a sinistra, come nella foto del cliente, così testi e schede a destra non la coprono).
 const PHOTOS = {
-  client: { src: '/images/login-client.jpg', mode: 'cover', position: '30% 40%' },
-  nutritionist: { src: '/images/hero-nutritionist.jpg', mode: 'band', position: '50% 30%' },
-  trainer: { src: '/images/hero-trainer.jpg', mode: 'band', position: '50% 30%' },
+  client: { src: '/images/login-client.jpg', mode: 'cover' },
+  nutritionist: { src: '/images/hero-nutritionist.jpg', mode: 'band' },
+  trainer: { src: '/images/hero-trainer.jpg', mode: 'band' },
+};
+const FADE = 'linear-gradient(to right, black 68%, transparent), linear-gradient(to bottom, black 60%, transparent)';
+const PHOTO_STYLE = {
+  cover: { inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '30% 40%' },
+  band: { top: 0, left: '-34%', width: '100%', height: 'auto', maskImage: FADE, WebkitMaskImage: FADE, maskComposite: 'intersect', WebkitMaskComposite: 'source-in' },
 };
 
-const COVER = 'inset-0 h-full w-full object-cover';
-const BAND = 'inset-x-0 top-0 h-auto w-full [mask-image:linear-gradient(to_bottom,black_62%,transparent)]';
+const glass = 'rounded-2xl bg-surface/85 shadow-float backdrop-blur-md';
 
 function Showcase({ role }) {
-  const cards = SHOWCASE[role] ?? SHOWCASE.client;
+  const content = SHOWCASE[role] ?? SHOWCASE.client;
   return (
     <aside aria-hidden="true" className="relative mx-4 mb-4 h-[440px] overflow-hidden rounded-3xl bg-gradient-to-b from-glow-1 to-glow-3 sm:mx-6 sm:mb-6 sm:h-[520px] lg:m-0 lg:h-auto lg:rounded-none">
       <PanelWaves />
@@ -103,33 +108,53 @@ function Showcase({ role }) {
           key={key}
           src={photo.src}
           alt=""
-          className={`absolute transition-opacity duration-700 ${photo.mode === 'cover' ? COVER : BAND} ${key === role ? 'opacity-100' : 'opacity-0'}`}
-          style={{ objectPosition: photo.position }}
+          className={`absolute max-w-none transition-opacity duration-700 ${key === role ? 'opacity-100' : 'opacity-0'}`}
+          style={PHOTO_STYLE[photo.mode]}
         />
       ))}
 
-      <div key={role} className="showcase-enter absolute top-[38%] right-3 flex w-[min(320px,74%)] flex-col gap-3 sm:top-[18%] sm:right-[6%] sm:w-[min(320px,64%)] sm:gap-4 lg:top-[22%] lg:gap-6">
-        <MetricCard {...cards.metric} />
-        <LinkCard {...cards.first} className="sm:ml-8" />
-        <LinkCard {...cards.second} className="sm:ml-3" />
+      {/* Testi motivazionali (solo su schermi grandi) e schede: a destra, sopra la foto */}
+      <div
+        key={role}
+        className="showcase-enter absolute inset-y-0 right-3 flex w-[min(320px,84%)] flex-col justify-end gap-3 py-4 sm:right-[6%] sm:w-[min(340px,62%)] sm:py-6 lg:justify-between lg:py-[7%] lg:short:py-5"
+      >
+        <div className={`hidden p-5 lg:block lg:short:p-4 ${glass}`}>
+          <h2 className="font-display text-[26px] leading-[1.15] font-semibold text-ink-900 lg:short:text-[22px]">{content.title}</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-ink-700 tiny:hidden">{content.text}</p>
+        </div>
+        <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5 lg:short:gap-3">
+          <MetricCard {...content.metric} />
+          <LinkCard {...content.first} className="sm:ml-8" />
+          <LinkCard {...content.second} className="sm:ml-3" />
+        </div>
+        <figure className={`hidden px-5 py-4 lg:block tiny:hidden ${glass}`}>
+          <blockquote className="font-serif text-[21px] leading-snug text-ink-900 italic lg:short:text-[18px]">
+            “{content.quote[0]}
+            <br />
+            {content.quote[1]}”
+          </blockquote>
+          <figcaption className="mt-2 flex items-center gap-3 text-xs text-ink-500">
+            <span className="h-px w-8 bg-ink-400" /> Your wellness. Connected.
+          </figcaption>
+        </figure>
       </div>
     </aside>
   );
 }
 
-const cardCls = 'rounded-2xl bg-surface/95 p-3 shadow-float backdrop-blur sm:p-4';
+const cardCls = 'rounded-2xl bg-surface/95 p-2.5 shadow-float backdrop-blur sm:p-4';
 
 function IconTile({ icon: Icon }) {
   return (
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 sm:h-12 sm:w-12">
-      <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} />
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 sm:h-12 sm:w-12">
+      <Icon className="h-[18px] w-[18px] sm:h-6 sm:w-6" strokeWidth={2.2} />
     </span>
   );
 }
 
 function MetricCard({ icon, title, value, trend = 'up', bars }) {
   return (
-    <div className={`flex items-center gap-3 ${cardCls}`}>
+    <div className={`flex items-center gap-2.5 sm:gap-3 ${cardCls}`}>
       <IconTile icon={icon} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] text-ink-700">{title}</p>
@@ -148,13 +173,13 @@ function MetricCard({ icon, title, value, trend = 'up', bars }) {
 
 function LinkCard({ icon, title, text, className = '' }) {
   return (
-    <div className={`flex items-center gap-3 ${cardCls} ${className}`}>
+    <div className={`flex items-center gap-2.5 sm:gap-3 ${cardCls} ${className}`}>
       <IconTile icon={icon} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold text-ink-900">{title}</p>
         <p className="truncate text-[13px] text-ink-500">{text}</p>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-ink-700" />
+      <ChevronRight className="hidden h-5 w-5 shrink-0 text-ink-700 min-[400px]:block" />
     </div>
   );
 }
@@ -163,6 +188,9 @@ function LinkCard({ icon, title, text, className = '' }) {
 const SHOWCASE = {
   get client() {
     return {
+      title: t('Un benessere più consapevole, ogni giorno.'),
+      text: t('Nutrizione, allenamento e supporto professionale, tutto in un unico luogo per una versione più sana e felice di te.'),
+      quote: [t('Un te più sano'), t('è un te più felice.')],
       metric: { icon: ChartNoAxesColumn, title: t('I tuoi progressi'), value: '+12%', bars: [22, 40, 62, 100] },
       first: { icon: Utensils, title: t('Nutrizione'), text: t('Piano personalizzato') },
       second: { icon: PersonStanding, title: t('Allenamento'), text: t('I tuoi prossimi obiettivi') },
@@ -170,6 +198,9 @@ const SHOWCASE = {
   },
   get nutritionist() {
     return {
+      title: t('I tuoi clienti, sempre sotto controllo.'),
+      text: t('Piani alimentari, controlli e progressi in un’unica dashboard, con i dati condivisi dal personal trainer.'),
+      quote: [t('Ogni piano è una persona,'), t('non un numero.')],
       metric: { icon: ChartNoAxesColumn, title: t('Andamento clienti'), value: '-1,2 kg', trend: 'down', bars: [100, 78, 64, 50] },
       first: { icon: ClipboardList, title: t('Piani alimentari'), text: t('Su misura per ogni cliente') },
       second: { icon: CalendarCheck, title: t('Controlli'), text: t('Check-up e progressi in agenda') },
@@ -177,6 +208,9 @@ const SHOWCASE = {
   },
   get trainer() {
     return {
+      title: t('Allenamenti che lasciano il segno.'),
+      text: t('Crea schede su misura, segui la costanza dei tuoi clienti e lavora in squadra con la nutrizionista.'),
+      quote: [t('La costanza batte'), t('il talento.')],
       metric: { icon: ChartNoAxesColumn, title: t('Costanza dei clienti'), value: '86%', bars: [48, 66, 74, 100] },
       first: { icon: Dumbbell, title: t('Schede di allenamento'), text: t('Esercizi, serie e recuperi') },
       second: { icon: Share2, title: t('Dati nutrizionali'), text: t('Condivisi dalla nutrizionista') },

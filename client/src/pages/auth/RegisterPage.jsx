@@ -82,9 +82,10 @@ export default function RegisterPage() {
 
         <Link
           to="/login"
-          className="mt-5 flex items-center justify-center gap-1.5 rounded-full border border-line bg-surface px-4 py-3 text-[15px] text-ink-700 transition hover:border-brand-300 hover:bg-soft short:mt-3 short:py-2.5 tiny:mt-2 tiny:py-2"
+          className="mt-5 block rounded-full border border-line bg-surface px-4 py-3 text-center text-[14px] text-ink-700 transition hover:border-brand-300 hover:bg-soft sm:text-[15px] short:mt-3 short:py-2.5 tiny:mt-2 tiny:py-2"
         >
-          <ArrowLeft className="h-4 w-4 text-brand-800" /> {t('Hai già un account?')} <span className="font-semibold text-brand-800">{t('Accedi')}</span>
+          <ArrowLeft className="mr-1.5 inline h-4 w-4 align-[-3px] text-brand-800" />
+          {t('Hai già un account?')} <span className="font-semibold whitespace-nowrap text-brand-800">{t('Accedi')}</span>
         </Link>
       </div>
     </AuthShell>

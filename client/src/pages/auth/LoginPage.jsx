@@ -106,10 +106,13 @@ export default function LoginPage() {
         </div>
         <Link
           to="/registrati"
-          className="flex items-center justify-center gap-1.5 rounded-full border border-line bg-surface px-4 py-3.5 text-[15px] text-ink-700 transition hover:border-brand-300 hover:bg-soft short:py-3 tiny:py-2"
+          className="block rounded-full border border-line bg-surface px-4 py-3.5 text-center text-[14px] text-ink-700 transition hover:border-brand-300 hover:bg-soft sm:text-[15px] short:py-3 tiny:py-2"
         >
-          {t('Non hai un account?')} <span className="font-semibold text-brand-800">{t('Registrati ora')}</span>
-          <ArrowRight className="h-4 w-4 text-brand-800" />
+          {/* Se non ci sta su una riga va a capo come una frase, senza spezzare "Registrati ora" */}
+          {t('Non hai un account?')}{' '}
+          <span className="inline-flex items-center gap-1.5 font-semibold whitespace-nowrap text-brand-800">
+            {t('Registrati ora')} <ArrowRight className="h-4 w-4" />
+          </span>
         </Link>
       </div>
     </AuthShell>

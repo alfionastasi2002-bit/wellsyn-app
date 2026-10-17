@@ -19,12 +19,13 @@ export function RolePicker({ value, onChange }) {
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={`flex flex-auto items-center justify-center gap-1.5 rounded-full px-2.5 py-2.5 text-[13px] font-medium whitespace-nowrap transition sm:gap-2 sm:px-3 sm:text-sm short:py-2 tiny:py-1.5 ${
+          className={`flex min-w-0 flex-auto items-center justify-center gap-1.5 rounded-full px-2 py-2 text-center text-[13px] leading-tight font-medium transition sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:whitespace-nowrap short:py-2 tiny:py-1.5 ${
             value === v ? 'bg-surface text-brand-800 shadow-card ring-1 ring-brand-200' : 'text-ink-700 hover:bg-surface/70'
           }`}
         >
-          <Icon className={`hidden h-4.5 w-4.5 shrink-0 min-[400px]:block ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
-          <span className="leading-tight">{label}</span>
+          {/* Icone solo dove c'è spazio: così il selettore non esce mai dalla scheda */}
+          <Icon className={`hidden h-4.5 w-4.5 shrink-0 sm:block lg:hidden xl:block ${value === v ? 'fill-brand-700/15' : ''}`} strokeWidth={1.9} />
+          <span className="min-w-0">{label}</span>
         </button>
       ))}
     </div>
