@@ -1,35 +1,66 @@
-import sanitizeHtml from 'sanitize-html';
+import xss from 'xss';
 import { dayKey, daysBetween, weekdayOf } from './dates.js';
 
 // Regole condivise dei piani alimentari: testo formattato sicuro, totali dei pasti, giorno del piano di oggi.
 
 const DATA_IMAGE = /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i;
+const ALIGNED = ['style']; // solo per l'allineamento del testo (vedi css qui sotto)
 
-/**
- * Introduzione del piano: tiene solo la formattazione dell'editor (titoli, grassetto, elenchi,
- * allineamento, link, immagini e tabelle) e toglie tutto il resto (script, eventi, stili, iframe…).
- */
+// Filtro dell'introduzione: tiene solo la formattazione dell'editor (titoli, grassetto, elenchi,
+// allineamento, link, immagini e tabelle) e toglie tutto il resto (script, eventi, stili, iframe…).
+const introFilter = new xss.FilterXSS({
+  whiteList: {
+    p: ALIGNED,
+    h2: ALIGNED,
+    h3: ALIGNED,
+    br: [],
+    strong: [],
+    b: [],
+    em: [],
+    i: [],
+    u: [],
+    s: [],
+    ul: [],
+    ol: [],
+    li: [],
+    a: ['href'],
+    img: ['src', 'alt'],
+    blockquote: [],
+    hr: [],
+    table: [],
+    colgroup: [],
+    col: [],
+    thead: [],
+    tbody: [],
+    tr: [],
+    th: ['colspan', 'rowspan'],
+    td: ['colspan', 'rowspan'],
+  },
+  css: { whiteList: { 'text-align': /^(left|right|center|justify)$/ } },
+  allowCommentTag: false,
+  stripIgnoreTag: true, // tag non ammessi: via il tag, resta il testo
+  stripIgnoreTagBody: ['script', 'style', 'iframe', 'object', 'embed', 'svg', 'math', 'noscript', 'template', 'textarea', 'select'],
+  onTagAttr(tag, name, value) {
+    // Link: solo web ed email
+    if (tag === 'a' && name === 'href') return /^(https?:|mailto:)/i.test(value.trim()) ? `href="${xss.escapeAttrValue(value.trim())}"` : '';
+    // Immagini: indirizzi https o foto incorporate (niente SVG o altri formati)
+    if (tag === 'img' && name === 'src') {
+      if (DATA_IMAGE.test(value)) return `src="${value.replace(/\s/g, '')}"`;
+      return /^https:\/\//i.test(value.trim()) ? `src="${xss.escapeAttrValue(value.trim())}"` : '';
+    }
+    return undefined; // gli altri attributi ammessi seguono le regole standard del filtro
+  },
+});
+
+/** Introduzione del piano ripulita ('' se è vuota). */
 export function sanitizeIntro(html) {
   if (!html) return '';
-  const clean = sanitizeHtml(html, {
-    allowedTags: ['p', 'br', 'h2', 'h3', 'strong', 'b', 'em', 'i', 'u', 's', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'colgroup', 'col', 'thead', 'tbody', 'tr', 'th', 'td', 'hr'],
-    allowedAttributes: {
-      a: ['href', 'target', 'rel'],
-      img: ['src', 'alt'],
-      th: ['colspan', 'rowspan'],
-      td: ['colspan', 'rowspan'],
-      '*': ['style'],
-    },
-    allowedStyles: { '*': { 'text-align': [/^(left|right|center|justify)$/] } },
-    allowedSchemes: ['http', 'https', 'mailto'],
-    allowedSchemesByTag: { img: ['https', 'data'] },
-    allowProtocolRelative: false,
-    transformTags: {
-      a: (tagName, attribs) => ({ tagName, attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' } }),
-    },
-    // Immagini incorporate: solo foto vere (niente SVG o altri formati)
-    exclusiveFilter: (frame) => frame.tag === 'img' && (!frame.attribs.src || (frame.attribs.src.startsWith('data:') && !DATA_IMAGE.test(frame.attribs.src))),
-  });
+  const clean = introFilter
+    .process(html)
+    // immagini rimaste senza indirizzo valido
+    .replace(/<img(?![^>]*\ssrc=)[^>]*>/gi, '')
+    // i link si aprono in una nuova scheda, senza dare accesso alla pagina di partenza
+    .replace(/<a\s/gi, '<a target="_blank" rel="noopener noreferrer" ');
   // Un editor vuoto lascia "<p></p>": vale come nessuna introduzione
   return clean.replace(/<p>(\s|<br\s*\/?>)*<\/p>/g, '').trim() ? clean : '';
 }
