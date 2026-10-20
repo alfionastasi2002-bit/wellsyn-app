@@ -407,6 +407,8 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-canvas font-sans text-ink-900 antialiased;
@@ -442,5 +444,15 @@
   }
   .input {
     @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink-900 transition outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100;
+  }
+}
+
+/* Telefoni: i campi di testo con caratteri sotto i 16 px fanno ingrandire tutta la pagina su iPhone appena li tocchi.
+   A 16 px lo zoom non scatta (regola fuori dai layer, così vale anche sui campi con text-sm). */
+@media (max-width: 639px) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  select,
+  textarea {
+    font-size: 16px;
   }
 }

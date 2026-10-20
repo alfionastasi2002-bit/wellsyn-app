@@ -1,7 +1,7 @@
 // Stato dell'editor dei piani alimentari: come si costruisce, si calcola e si prepara per il salvataggio.
 import { numberToText, toNumber } from '../../components/forms.jsx';
 import { t } from '../../i18n/index.js';
-import { DEFAULT_TIMES, FOOD_BY_ID, findFoodByName, nameOf, nutritionOf } from '../../lib/foods.js';
+import { DEFAULT_TIMES, findFoodByName, foodInfoOf, foodOfItem, nameOf, nutritionOf } from '../../lib/foods.js';
 import { MEAL_META } from '../../lib/labels.js';
 
 let seq = 0;
@@ -12,12 +12,13 @@ export const DEFAULT_MEALS = ['colazione', 'spuntino', 'pranzo', 'merenda', 'cen
 
 // Costruzione
 
-export const emptyItem = () => ({ key: newKey(), name: '', food: null, quantity: '', unit: 'g', alternative: '', kcal: null, protein: null, carbs: null, fat: null, custom: false });
+export const emptyItem = () => ({ key: newKey(), name: '', food: null, foodInfo: null, quantity: '', unit: 'g', alternative: '', kcal: null, protein: null, carbs: null, fat: null, custom: false });
 
 export const itemFrom = (i) => ({
   key: newKey(),
   name: i.name ?? '',
-  food: i.food && FOOD_BY_ID[i.food] ? i.food : null,
+  food: foodOfItem(i) ? i.food : null,
+  foodInfo: i.foodInfo ?? null,
   quantity: numberToText(i.quantity),
   unit: i.unit ?? 'g',
   alternative: i.alternative ?? '',
@@ -28,9 +29,9 @@ export const itemFrom = (i) => ({
   custom: !i.food,
 });
 
-/** Alimento della libreria con la quantità proposta (o quella indicata) e i suoi valori. */
+/** Alimento (della libreria, della banca dati o confezionato) con la quantità proposta (o quella indicata) e i suoi valori. */
 export function itemFromFood(food, { quantity = food.qty, unit = food.unit, alternative = '' } = {}) {
-  return { ...emptyItem(), name: nameOf(food), food: food.id, quantity: numberToText(quantity), unit, alternative, ...nutritionOf(food, quantity, unit) };
+  return { ...emptyItem(), name: nameOf(food).slice(0, 140), food: food.id, foodInfo: foodInfoOf(food), quantity: numberToText(quantity), unit, alternative, ...nutritionOf(food, quantity, unit) };
 }
 
 export const emptyMeal = (type) => ({
@@ -139,7 +140,7 @@ export const dayHasFood = (day) => day.meals.some((m) => m.items.some((i) => i.n
 export function withQuantity(item, patch) {
   const next = { ...item, ...patch };
   const qty = toNumber(next.quantity);
-  const food = next.food ? FOOD_BY_ID[next.food] : null;
+  const food = foodOfItem(next);
   if (food && !next.custom) {
     return { ...next, ...(qty == null || Number.isNaN(qty) ? { kcal: null, protein: null, carbs: null, fat: null } : nutritionOf(food, qty, next.unit)) };
   }
@@ -158,11 +159,11 @@ export function withName(item, name) {
     const qty = toNumber(item.quantity);
     const quantity = qty > 0 ? qty : food.qty;
     const unit = qty > 0 ? item.unit : food.unit;
-    return { ...item, name, food: food.id, custom: false, quantity: numberToText(quantity), unit, ...nutritionOf(food, quantity, unit) };
+    return { ...item, name, food: food.id, foodInfo: null, custom: false, quantity: numberToText(quantity), unit, ...nutritionOf(food, quantity, unit) };
   }
   if (item.food && (!food || food.id !== item.food)) {
     // Il nome non è più quello dell'alimento collegato: i valori restano, ma diventano "a mano"
-    return { ...item, name, food: null, custom: true };
+    return { ...item, name, food: null, foodInfo: null, custom: true };
   }
   return { ...item, name };
 }
@@ -194,6 +195,7 @@ export function toPayload(form, status) {
           items.push({
             name: i.name.trim(),
             food: i.food ?? undefined,
+            foodInfo: (i.food && i.foodInfo) || undefined,
             quantity,
             unit: i.unit,
             alternative: i.alternative.trim(),

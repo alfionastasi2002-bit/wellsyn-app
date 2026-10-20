@@ -1,8 +1,9 @@
 import { ChevronsLeft, ChevronsRight, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router';
 import { t } from '../../i18n/index.js';
+import { ROLE_LABELS } from '../../lib/format.js';
 import { NAVIGATION } from '../../navigation.js';
-import { LogoMark, LogoStacked } from '../Logo.jsx';
+import { RoleSymbol } from '../RoleSymbol.jsx';
 
 /**
  * Menu laterale. Su smartphone/tablet si apre a scomparsa; da computer è sempre visibile
@@ -17,7 +18,7 @@ export function Sidebar({ role, counters, open, onClose, collapsed, onToggleColl
     <>
       {/* Sfondo scuro dietro il menu su smartphone/tablet */}
       <div
-        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-[35] bg-black/40 backdrop-blur-[1px] transition-opacity lg:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={onClose}
@@ -49,9 +50,10 @@ export function Sidebar({ role, counters, open, onClose, collapsed, onToggleColl
           {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
         </button>
 
-        <Link to="/app" onClick={onClose} className="mx-auto mb-7 shrink-0" aria-label={t('Wellsyn, vai alla dashboard')}>
-          <LogoStacked className={slim('lg:hidden')} />
-          {collapsed && <LogoMark className="hidden h-10 w-auto lg:block" />}
+        {/* Simbolo del profilo di chi è entrato (il logo Wellsyn sta nella barra in alto) */}
+        <Link to="/app" onClick={onClose} className="mx-auto mb-7 shrink-0" aria-label={t('Vai alla dashboard')} title={collapsed ? ROLE_LABELS[role] : undefined}>
+          <RoleSymbol role={role} className={slim('lg:hidden')} />
+          {collapsed && <RoleSymbol role={role} compact className="hidden lg:flex" />}
         </Link>
 
         <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto">

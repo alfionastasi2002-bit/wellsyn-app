@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LifeBuoy, LogOut, Menu, Monitor, Moon, Settings, Sun } from 'lucide-react';
+import { Bell, ChevronDown, LifeBuoy, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -7,10 +7,9 @@ import { LANGUAGES, t } from '../../i18n/index.js';
 import { displayName, ROLE_LABELS } from '../../lib/format.js';
 import { messagesPath } from '../../navigation.js';
 import { Avatar } from '../Avatar.jsx';
-import { LogoMark } from '../Logo.jsx';
-import { QuickSearch } from './QuickSearch.jsx';
+import { LogoFull } from '../Logo.jsx';
 
-export function Topbar({ onOpenMenu, unread }) {
+export function Topbar({ unread }) {
   const { user, logout, savePreferences } = useAuth();
   const { theme, language } = usePreferences();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,20 +31,11 @@ export function Topbar({ onOpenMenu, unread }) {
   const menuItem = 'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink-700 hover:bg-brand-50';
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line/70 bg-canvas/90 px-4 py-3 backdrop-blur-md sm:px-6 lg:border-none lg:px-8 lg:pt-4 lg:pb-3">
-      <button
-        type="button"
-        onClick={onOpenMenu}
-        className="rounded-xl p-2 text-ink-700 hover:bg-surface lg:hidden"
-        aria-label={t('Apri menu')}
-      >
-        <Menu className="h-6 w-6" />
-      </button>
-      <Link to="/app" className="lg:hidden" aria-label={t('Wellsyn, vai alla dashboard')}>
-        <LogoMark className="h-8 w-auto" />
+    <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line/70 bg-canvas/90 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-md sm:px-6 lg:border-none lg:px-8 lg:pt-4 lg:pb-3">
+      {/* Logo Wellsyn (nel menu laterale c'è il simbolo del profilo; su smartphone e tablet il menu si apre dalla barra in basso) */}
+      <Link to="/app" className="min-w-0 shrink" aria-label={t('Wellsyn, vai alla dashboard')}>
+        <LogoFull className="h-7 max-w-full object-contain object-left sm:h-9 lg:h-10" />
       </Link>
-
-      <QuickSearch role={user.role} />
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <Link
@@ -78,7 +68,7 @@ export function Topbar({ onOpenMenu, unread }) {
             aria-expanded={menuOpen}
             aria-label={t('Menu utente')}
           >
-            <Avatar user={user} size="lg" />
+            <Avatar user={user} size="md" className="sm:h-12 sm:w-12 sm:text-base" />
             <span className="hidden text-left sm:block">
               <span className="block text-sm leading-tight font-semibold text-ink-900">{displayName(user)}</span>
               <span className="block text-xs text-ink-500">{ROLE_LABELS[user.role]}</span>

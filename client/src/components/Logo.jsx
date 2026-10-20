@@ -14,6 +14,16 @@ export function LogoStacked({ className = '', imgClassName = 'h-28' }) {
   );
 }
 
+/** Logo orizzontale (simbolo a sinistra, scritta e payoff a destra), usato nella barra in alto. */
+export function LogoFull({ className = 'h-10' }) {
+  return (
+    <>
+      <img src="/brand/logo-full.png" alt="Wellsyn – Your wellness. Connected." className={`w-auto dark:hidden ${className}`} />
+      <img src="/brand/logo-full-light.png" alt="Wellsyn – Your wellness. Connected." className={`hidden w-auto dark:block ${className}`} />
+    </>
+  );
+}
+
 export function LogoMark({ className = 'h-8 w-auto' }) {
   return <img src="/brand/logo-mark.png" alt="Wellsyn" className={className} />;
 }

@@ -33,6 +33,7 @@ import {
   numberToText,
   toNumber,
 } from '../../components/forms.jsx';
+import { MobileSaveBar } from '../../components/MobileSaveBar.jsx';
 import { Card, CardHeader, EmptyState, ErrorState, PageLoader } from '../../components/ui.jsx';
 import { t, translateMessage } from '../../i18n/index.js';
 import { api } from '../../lib/api.js';
@@ -149,30 +150,31 @@ function WorkoutPlanList() {
                   {p.needsReview && <StatusPill className="bg-amber-50 text-amber-700">{t('Da aggiornare')}</StatusPill>}
                   <span className="text-ink-500">{t('Aggiornata il {date}', { date: fmtDate(p.updatedAt, { day: 'numeric', month: 'short' }) })}</span>
                 </div>
+                {/* Su telefono le azioni secondarie mostrano solo l'icona */}
                 <div className="flex flex-wrap gap-2">
                   <Link to={`/app/schede/${p.id}`} className="btn-outline">
                     <Pencil className="h-4 w-4" /> {t('Modifica')}
                   </Link>
-                  <Link to={`/app/schede/nuova?da=${p.id}`} className="btn-soft" title={t('Usa questa scheda come base per un altro cliente')}>
-                    <CopyPlus className="h-4 w-4" /> {t('Duplica')}
+                  <Link to={`/app/schede/nuova?da=${p.id}`} className="btn-soft max-sm:px-3" title={t('Usa questa scheda come base per un altro cliente')}>
+                    <CopyPlus className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Duplica')}</span>
                   </Link>
                   {p.needsReview && (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { needsReview: false })}>
-                      <CircleCheck className="h-4 w-4" /> {t('Aggiornata')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { needsReview: false })}>
+                      <CircleCheck className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Aggiornata')}</span>
                     </button>
                   )}
                   {p.status === 'archived' ? (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { status: 'active' })}>
-                      <RotateCcw className="h-4 w-4" /> {t('Riattiva')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { status: 'active' })}>
+                      <RotateCcw className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Riattiva')}</span>
                     </button>
                   ) : (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { status: 'archived' })}>
-                      <Archive className="h-4 w-4" /> {t('Archivia')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { status: 'archived' })}>
+                      <Archive className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Archivia')}</span>
                     </button>
                   )}
                   {p.status !== 'active' && (
-                    <ConfirmButton confirmLabel={t('Elimina')} onConfirm={() => remove(p)}>
-                      <Trash2 className="h-4 w-4" /> {t('Elimina')}
+                    <ConfirmButton className="btn-soft max-sm:px-3" confirmLabel={t('Elimina')} onConfirm={() => remove(p)}>
+                      <Trash2 className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Elimina')}</span>
                     </ConfirmButton>
                   )}
                 </div>
@@ -438,6 +440,18 @@ function WorkoutPlanEditor({ id }) {
         </div>
         <SaveButton saving={saving}>{t('Salva scheda')}</SaveButton>
       </div>
+
+      {/* Telefono e tablet: salvataggio sempre a portata di mano */}
+      <MobileSaveBar
+        summary={
+          <>
+            <span className="block truncate font-semibold text-ink-900">{form.title.trim() || t('Nuova scheda')}</span>
+            {t('{n} sessioni/settimana', { n: form.sessions.length })}
+          </>
+        }
+      >
+        <SaveButton saving={saving}>{t('Salva scheda')}</SaveButton>
+      </MobileSaveBar>
     </form>
   );
 }

@@ -11,6 +11,12 @@ const itemSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     food: { type: String, trim: true }, // codice dell'alimento nella libreria (se scelto da lì)
+    // Alimento della banca dati o prodotto confezionato: valori per 100 g (o 100 ml) e peso di una porzione,
+    // per ricalcolare calorie e macronutrienti quando cambiano quantità o unità
+    foodInfo: {
+      type: new mongoose.Schema({ kcal: Number, protein: Number, carbs: Number, fat: Number, portion: Number, emoji: String }, { _id: false }),
+      default: undefined,
+    },
     quantity: Number,
     unit: { type: String, enum: FOOD_UNITS },
     alternative: { type: String, trim: true },

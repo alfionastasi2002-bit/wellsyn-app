@@ -39,7 +39,7 @@ export default function NutritionistDashboard() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
         <StatCard icon={Users} label={t('Clienti totali')} value={stats.clients.total} to="/app/clienti">
           <Delta value={stats.clients.newThisMonth} digits={0} goodWhen="up" /> {t('nuovi questo mese')}
         </StatCard>
@@ -97,12 +97,12 @@ function RecentClients({ clients }) {
         </EmptyState>
       ) : (
         <div className="relative mt-4 overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm">
+          <table className="w-full text-sm sm:min-w-[520px]">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
                 <th className="pb-2 font-medium">{t('Cliente')}</th>
-                <th className="pb-2 font-medium">{t('Piano')}</th>
-                <th className="pb-2 font-medium">{t('Ultimo check')}</th>
+                <th className="hidden pb-2 font-medium sm:table-cell">{t('Piano')}</th>
+                <th className="hidden pb-2 font-medium sm:table-cell">{t('Ultimo check')}</th>
                 <th className="pb-2 font-medium">{t('Stato')}</th>
                 <th className="pb-2">
                   <span className="sr-only">{t('Apri')}</span>
@@ -114,14 +114,20 @@ function RecentClients({ clients }) {
                 const s = STATUS[c.status];
                 return (
                   <tr key={c.linkId}>
-                    <td className="py-2.5">
+                    <td className="py-2.5 pr-2">
                       <span className="flex items-center gap-3">
                         <Avatar user={c.client} />
-                        <span className="font-medium">{c.client.fullName}</span>
+                        <span className="min-w-0">
+                          <span className="block font-medium">{c.client.fullName}</span>
+                          {/* Su telefono piano e ultimo check stanno qui, sotto il nome */}
+                          <span className="block text-xs text-ink-500 sm:hidden">
+                            {[c.program && t(c.program), c.lastCheck && fmtDate(c.lastCheck, { day: 'numeric', month: 'short' })].filter(Boolean).join(' · ') || '—'}
+                          </span>
+                        </span>
                       </span>
                     </td>
-                    <td className="py-2.5 text-ink-700">{c.program ? t(c.program) : '—'}</td>
-                    <td className="py-2.5 text-ink-700">{c.lastCheck ? fmtDate(c.lastCheck, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                    <td className="hidden py-2.5 text-ink-700 sm:table-cell">{c.program ? t(c.program) : '—'}</td>
+                    <td className="hidden py-2.5 text-ink-700 sm:table-cell">{c.lastCheck ? fmtDate(c.lastCheck, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                     <td className="py-2.5">
                       <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${s.pill}`}>
                         <span className={`h-2 w-2 rounded-full ${s.dot}`} /> {t(s.label)}

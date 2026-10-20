@@ -104,6 +104,13 @@ const avatar = z
   .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Formato immagine non valido.')
   .nullable()
   .transform((v) => v || undefined);
+// Banner: immagine larga già ridotta dal browser (circa 1800×600), salvata come data URL.
+const banner = z
+  .string()
+  .max(1_400_000, "L'immagine è troppo grande: scegline una più leggera.")
+  .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Formato immagine non valido.')
+  .nullable()
+  .transform((v) => v || undefined);
 const workingHours = z
   .object({
     days: z.array(z.number().int().min(1).max(7)).max(7),
@@ -120,6 +127,7 @@ const PROFILE_FIELDS = {
     city: optionalText(60),
     birthDate: dayKeySchema.nullable().optional().transform((v) => v || undefined),
     avatarUrl: avatar.optional(),
+    bannerUrl: banner.optional(),
     avatarColor: z.enum(AVATAR_COLORS).nullable().optional().transform((v) => v || undefined),
     coverStyle: z.enum(COVER_STYLES).nullable().optional().transform((v) => v || undefined),
     preferences: z.object({

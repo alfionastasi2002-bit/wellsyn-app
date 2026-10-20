@@ -1,9 +1,10 @@
 import { ChevronUp, CirclePlus, Clock, Copy, FileText, GripVertical, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Popover } from '../../components/DatePicker.jsx';
+import { Spinner } from '../../components/ui.jsx';
 import { numberToText, toNumber } from '../../components/forms.jsx';
 import { getLanguage, t } from '../../i18n/index.js';
-import { emojiOf, FOOD_BY_ID, FOOD_UNITS, foodSuggestions, nameOf, recipeItems, unitLabel } from '../../lib/foods.js';
+import { emojiOf, FOOD_UNITS, foodOfItem, foodSuggestions, loadFoodDatabase, nameOf, productEntry, recipeItems, searchProducts, unitLabel } from '../../lib/foods.js';
 import { fmtNumber } from '../../lib/format.js';
 import { MEAL_META, MEAL_TYPES } from '../../lib/labels.js';
 import { emptyItem, itemFrom, itemFromFood, mealTitle, mealTotals, withName, withQuantity } from './mealPlanModel.js';
@@ -207,7 +208,7 @@ function MealSettings({ meal, onChange }) {
 
 /** Riga di un alimento: miniatura, nome (con suggerimenti), quantità, unità, alternativa. */
 function FoodRow({ item, mealType, onChange, onRemove, onRecipe, autoFocus, onFocused }) {
-  const food = item.food ? FOOD_BY_ID[item.food] : null;
+  const food = foodOfItem(item);
   const valuesRef = useRef(null);
   const [valuesOpen, setValuesOpen] = useState(false);
 
@@ -292,14 +293,44 @@ function AlternativeInput({ value, onChange }) {
   );
 }
 
-/** Nome dell'alimento con suggerimenti dalla libreria (alimenti e ricette per quel pasto). */
+/**
+ * Prodotti confezionati che corrispondono al testo scritto: si cercano online (tramite il server)
+ * dopo una breve pausa nella scrittura, da 3 lettere in su.
+ */
+function useProductSearch(query) {
+  const q = query.trim();
+  const [state, setState] = useState({ q: '', items: [], error: false });
+  useEffect(() => {
+    if (q.length < 3) return undefined;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      searchProducts(q, controller.signal)
+        .then((items) => setState({ q, items, error: false }))
+        .catch(() => !controller.signal.aborted && setState({ q, items: [], error: true }));
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [q]);
+  if (q.length < 3) return { items: [], loading: false, error: false };
+  return state.q === q ? { ...state, loading: false } : { items: [], loading: true, error: false };
+}
+
+/**
+ * Nome dell'alimento con suggerimenti: alimenti (libreria e banca dati di quasi 3.000 alimenti),
+ * ricette per quel pasto e prodotti confezionati o di marca.
+ */
 function FoodNameInput({ value, mealType, onChange, onPickFood, onPickRecipe, autoFocus, onFocused }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [, setDatabaseReady] = useState(false);
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
   const listId = useId();
-  const items = open ? foodSuggestions(value, mealType) : [];
+  const products = useProductSearch(open ? value : '');
+  const items = open ? [...foodSuggestions(value, mealType), ...products.items.map(productEntry)] : [];
+  const searching = open && value.trim().length >= 3;
 
   useEffect(() => {
     if (autoFocus) {
@@ -310,14 +341,16 @@ function FoodNameInput({ value, mealType, onChange, onPickFood, onPickRecipe, au
 
   useEffect(() => {
     if (!open) return undefined;
+    // La banca dati degli alimenti si carica la prima volta che si apre un elenco di suggerimenti
+    loadFoodDatabase().then(() => setDatabaseReady(true));
     const onDown = (e) => !wrapRef.current?.contains(e.target) && setOpen(false);
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
   function pick(entry) {
-    if (entry.kind === 'food') onPickFood(entry.food);
-    else onPickRecipe(entry.recipe);
+    if (entry.kind === 'recipe') onPickRecipe(entry.recipe);
+    else onPickFood(entry.food);
     setOpen(false);
   }
 
@@ -331,15 +364,21 @@ function FoodNameInput({ value, mealType, onChange, onPickFood, onPickRecipe, au
       setActive((i) => (i - 1 + items.length) % items.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      pick(items[active]);
+      pick(items[Math.min(active, items.length - 1)]);
     } else if (e.key === 'Escape') {
       e.stopPropagation();
       setOpen(false);
     }
   }
 
-  const hasRecipes = items.some((i) => i.kind === 'recipe');
-  const firstRecipe = items.findIndex((i) => i.kind === 'recipe');
+  // Titolo di ogni gruppo di suggerimenti, sopra la sua prima voce
+  const firstOf = (kind) => items.findIndex((i) => i.kind === kind);
+  const headings = {};
+  if (value.trim() && firstOf('food') >= 0) headings[firstOf('food')] = t('Alimenti');
+  if (firstOf('recipe') >= 0) headings[firstOf('recipe')] = value.trim() ? t('Ricette') : t('Idee per questo pasto');
+  if (firstOf('product') >= 0) headings[firstOf('product')] = t('Prodotti confezionati e di marca');
+  const heading = (text) => <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{text}</p>;
+  const showList = items.length > 0 || searching;
 
   return (
     <div ref={wrapRef} className="relative">
@@ -353,23 +392,25 @@ function FoodNameInput({ value, mealType, onChange, onPickFood, onPickRecipe, au
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder={t('Cerca un alimento o una ricetta…')}
+        placeholder={t('Cerca un alimento, un prodotto o una ricetta…')}
         aria-label={t('Alimento')}
         role="combobox"
-        aria-expanded={items.length > 0}
+        aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
         autoComplete="off"
-        maxLength={80}
+        maxLength={140}
         className={`${fieldCls} pr-[64px] font-medium`}
       />
-      {items.length > 0 && (
-        <ul id={listId} role="listbox" className="absolute top-full left-0 z-40 mt-1 max-h-80 w-[min(380px,85vw)] overflow-y-auto rounded-xl border border-line bg-surface p-1 shadow-float">
+      {showList && (
+        <ul
+          id={listId}
+          role="listbox"
+          className="absolute top-full left-0 z-40 mt-1 max-h-[min(26rem,60vh)] w-[max(100%,min(440px,calc(100vw-6rem)))] overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface p-1 shadow-float"
+        >
           {items.map((entry, i) => (
             <li key={entry.key} role="option" aria-selected={i === active}>
-              {i === firstRecipe && hasRecipes && (
-                <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{value.trim() ? t('Ricette') : t('Idee per questo pasto')}</p>
-              )}
+              {headings[i] && heading(headings[i])}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -381,17 +422,38 @@ function FoodNameInput({ value, mealType, onChange, onPickFood, onPickRecipe, au
                   {entry.emoji}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-ink-900">{nameOf(entry.kind === 'food' ? entry.food : entry.recipe)}</span>
+                  <span className="block truncate font-medium text-ink-900">{nameOf(entry.kind === 'recipe' ? entry.recipe : entry.food)}</span>
                   <span className="block truncate text-xs text-ink-500">
-                    {entry.kind === 'food'
-                      ? `${numberToText(entry.food.qty)} ${unitLabel(entry.food.unit)}`
-                      : t('Ricetta · {n} alimenti', { n: entry.count })}
+                    {entry.kind === 'recipe'
+                      ? t('Ricetta · {n} alimenti', { n: entry.count })
+                      : `${numberToText(entry.food.qty)} ${unitLabel(entry.food.unit)}${
+                          entry.kind === 'product' && entry.food.portion ? ` · ${t('1 porzione = {n} g', { n: numberToText(entry.food.portion) })}` : ''
+                        }`}
                   </span>
                 </span>
                 <span className="shrink-0 text-xs font-semibold text-brand-800">{fmtNumber(entry.kcal, 0)} kcal</span>
               </button>
             </li>
           ))}
+          {/* Prodotti confezionati: ricerca in corso, non disponibile, fonte dei dati */}
+          {searching && products.loading && (
+            <li role="presentation">
+              {heading(t('Prodotti confezionati e di marca'))}
+              <p className="flex items-center gap-2 px-3 pt-1 pb-2 text-xs text-ink-500">
+                <Spinner className="h-3.5 w-3.5" /> {t('Cerco tra i prodotti confezionati…')}
+              </p>
+            </li>
+          )}
+          {searching && products.error && (
+            <li role="presentation">
+              <p className="px-3 py-2 text-xs text-ink-500">{t('Prodotti confezionati non disponibili al momento.')}</p>
+            </li>
+          )}
+          {products.items.length > 0 && (
+            <li role="presentation">
+              <p className="px-3 pt-1 pb-1.5 text-[11px] text-ink-400">{t('Dati dei prodotti confezionati: Open Food Facts')}</p>
+            </li>
+          )}
         </ul>
       )}
     </div>
@@ -412,7 +474,7 @@ function ValuesPopover({ anchorRef, open, onClose, item, food, onChange }) {
       <p className="text-sm font-semibold">{item.name || t('Alimento')}</p>
       <p className="mt-0.5 text-xs text-ink-500">
         {qty ? t('Valori per {qty} {unit}', { qty: numberToText(qty), unit: unitLabel(item.unit) }) : t('Valori per la quantità indicata')}
-        {food && !item.custom && ` · ${t('dalla libreria')}`}
+        {food && !item.custom && ` · ${item.food.startsWith('off-') ? t('dal prodotto confezionato') : item.food.startsWith('cq-') ? t('dalla banca dati') : t('dalla libreria')}`}
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {fields.map(([key, label, unit]) => (

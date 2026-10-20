@@ -4,6 +4,7 @@ import {
   Check,
   Eye,
   HeartPulse,
+  Image as ImageIcon,
   KeyRound,
   Languages,
   LogOut,
@@ -116,8 +117,12 @@ export default function SettingsPage() {
 
 // Copertina con foto
 
-/** Riduce l'immagine scelta a un quadrato di 256 px (JPEG leggero). */
-function resizeImage(file) {
+// Misure delle immagini salvate: foto profilo quadrata, banner largo 3:1 (si adatta a Dashboard e profilo).
+const AVATAR_SIZE = { width: 256, height: 256, quality: 0.85 };
+const BANNER_SIZE = { width: 1800, height: 600, quality: 0.8 };
+
+/** Ritaglia al centro l'immagine scelta nelle proporzioni indicate e la riduce (JPEG leggero). */
+function resizeImage(file, { width, height, quality }) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error(t('Impossibile leggere il file.')));
@@ -125,14 +130,17 @@ function resizeImage(file) {
       const img = new Image();
       img.onerror = () => reject(new Error(t('Il file scelto non è un’immagine valida.')));
       img.onload = () => {
-        const size = 256;
-        const side = Math.min(img.width, img.height);
+        // Parte centrale dell'immagine con le proporzioni giuste; non si ingrandisce oltre l'originale
+        const ratio = width / height;
+        const cropW = Math.min(img.width, img.height * ratio);
+        const cropH = cropW / ratio;
+        const scale = Math.min(1, width / cropW);
         const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
+        canvas.width = Math.round(cropW * scale);
+        canvas.height = Math.round(cropH * scale);
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        ctx.drawImage(img, (img.width - cropW) / 2, (img.height - cropH) / 2, cropW, cropH, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.src = reader.result;
     };
@@ -140,11 +148,10 @@ function resizeImage(file) {
   });
 }
 
-function ProfileHero() {
-  const { user } = useAuth();
+/** Scelta di un'immagine dal dispositivo: la controlla, la riduce e la salva nel profilo. */
+function useImageUpload(field, size, message) {
   const { save, saving, error, setError, flash } = useProfileSave();
-  const fileRef = useRef(null);
-
+  const inputRef = useRef(null);
   async function onFile(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -152,29 +159,71 @@ function ProfileHero() {
     if (!file.type.startsWith('image/')) return setError(t('Il file scelto non è un’immagine valida.'));
     if (file.size > 15 * 1024 * 1024) return setError(t('L’immagine è troppo grande (massimo 15 MB).'));
     try {
-      const avatarUrl = await resizeImage(file);
-      await save({ avatarUrl }, t('Foto profilo aggiornata.'));
+      await save({ [field]: await resizeImage(file, size) }, message);
     } catch (err) {
       setError(err.message);
     }
   }
+  const input = <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />;
+  return { input, choose: () => inputRef.current?.click(), save, saving, error, flash };
+}
+
+/** Banner del profilo: l'immagine scelta dall'utente oppure il colore della copertina. */
+function Cover({ user, className }) {
+  if (user.bannerUrl) return <img src={user.bannerUrl} alt="" className={`w-full object-cover ${className}`} />;
+  return <div className={className} style={{ background: COVERS[user.coverStyle] ?? COVERS.mint }} />;
+}
+
+function ProfileHero() {
+  const { user } = useAuth();
+  const photo = useImageUpload('avatarUrl', AVATAR_SIZE, t('Foto profilo aggiornata.'));
+  const banner = useImageUpload('bannerUrl', BANNER_SIZE, t('Banner aggiornato: lo vedi anche in cima alla Dashboard.'));
+  const error = photo.error || banner.error;
+  const flash = photo.flash || banner.flash;
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-28 sm:h-36" style={{ background: COVERS[user.coverStyle] ?? COVERS.mint }} />
+      <div className="relative">
+        <Cover user={user} className="h-32 sm:h-44" />
+        {/* Cambia o rimuovi il banner */}
+        <div className="absolute top-3 right-3 flex gap-2">
+          {user.bannerUrl && (
+            <button
+              type="button"
+              onClick={() => banner.save({ bannerUrl: null }, t('Banner rimosso.'))}
+              disabled={banner.saving}
+              className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-black/60"
+              aria-label={t('Rimuovi il banner')}
+              title={t('Rimuovi il banner')}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={banner.choose}
+            disabled={banner.saving}
+            className="flex h-9 items-center gap-2 rounded-full bg-black/45 px-3.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-black/60"
+          >
+            {banner.saving ? <Spinner className="h-4 w-4 text-white" /> : <ImageIcon className="h-4 w-4" />}
+            {t('Cambia banner')}
+          </button>
+          {banner.input}
+        </div>
+      </div>
       <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end">
         <div className="relative -mt-14 w-fit">
           <Avatar user={user} size="2xl" className="ring-4 ring-surface" />
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
+            onClick={photo.choose}
             className="absolute right-0 bottom-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-white shadow-float ring-2 ring-surface hover:bg-primary-strong"
             aria-label={t('Cambia foto profilo')}
             title={t('Cambia foto profilo')}
           >
-            {saving ? <Spinner className="h-4 w-4 text-white" /> : <Camera className="h-4 w-4" />}
+            {photo.saving ? <Spinner className="h-4 w-4 text-white" /> : <Camera className="h-4 w-4" />}
           </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+          {photo.input}
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-display text-2xl font-semibold">{displayName(user)}</h2>
@@ -185,11 +234,11 @@ function ProfileHero() {
           <p className="text-xs text-ink-400">{t('Su Wellsyn dal {date}', { date: fmtDate(user.createdAt) })}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn-outline" onClick={() => fileRef.current?.click()} disabled={saving}>
+          <button type="button" className="btn-outline" onClick={photo.choose} disabled={photo.saving}>
             <Camera className="h-4 w-4" /> {user.avatarUrl ? t('Cambia foto') : t('Carica una foto')}
           </button>
           {user.avatarUrl && (
-            <button type="button" className="btn-soft" onClick={() => save({ avatarUrl: null }, t('Foto rimossa.'))} disabled={saving}>
+            <button type="button" className="btn-soft" onClick={() => photo.save({ avatarUrl: null }, t('Foto rimossa.'))} disabled={photo.saving}>
               <Trash2 className="h-4 w-4" /> {t('Rimuovi')}
             </button>
           )}
@@ -494,6 +543,7 @@ function Appearance() {
   const { user, savePreferences } = useAuth();
   const prefs = usePreferences();
   const { save, error } = useProfileSave();
+  const banner = useImageUpload('bannerUrl', BANNER_SIZE, t('Banner aggiornato: lo vedi anche in cima alla Dashboard.'));
 
   return (
     <div className="space-y-5">
@@ -541,7 +591,7 @@ function Appearance() {
       </Card>
 
       <Card className="p-5">
-        <CardHeader icon={UserRound} title={t('Avatar e copertina')} subtitle={t('Il colore dell’avatar si vede quando non hai una foto.')} />
+        <CardHeader icon={UserRound} title={t('Avatar e banner')} subtitle={t('Il colore dell’avatar si vede quando non hai una foto.')} />
         <p className="mt-4 text-sm font-medium text-ink-700">{t('Colore dell’avatar')}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {Object.entries(AVATAR_COLORS).map(([key, cls]) => (
@@ -557,21 +607,38 @@ function Appearance() {
             </button>
           ))}
         </div>
-        <p className="mt-5 text-sm font-medium text-ink-700">{t('Copertina del profilo')}</p>
+        <p className="mt-5 text-sm font-medium text-ink-700">{t('Banner')}</p>
+        <p className="text-xs text-ink-500">{t('Carica una tua immagine: compare in cima al profilo e alla Dashboard. In alternativa scegli solo un colore per la copertina del profilo.')}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <Cover user={user} className="h-16 w-48 shrink-0 rounded-xl" />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn-outline" onClick={banner.choose} disabled={banner.saving}>
+              {banner.saving ? <Spinner className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />} {user.bannerUrl ? t('Cambia banner') : t('Carica un banner')}
+            </button>
+            {user.bannerUrl && (
+              <button type="button" className="btn-soft" onClick={() => banner.save({ bannerUrl: null }, t('Banner rimosso.'))} disabled={banner.saving}>
+                <Trash2 className="h-4 w-4" /> {t('Rimuovi')}
+              </button>
+            )}
+          </div>
+          {banner.input}
+        </div>
+        <Flash>{banner.flash}</Flash>
+        <p className="mt-5 text-sm font-medium text-ink-700">{t('Colore della copertina')}</p>
         <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {Object.entries(COVERS).map(([key, background]) => (
             <button
               key={key}
               type="button"
-              onClick={() => save({ coverStyle: key }, t('Copertina aggiornata.'))}
-              className={`h-12 rounded-xl ${(user.coverStyle ?? 'mint') === key ? 'ring-2 ring-brand-600 ring-offset-2 ring-offset-surface' : ''}`}
+              onClick={() => save({ coverStyle: key, ...(user.bannerUrl && { bannerUrl: null }) }, t('Copertina aggiornata.'))}
+              className={`h-12 rounded-xl ${!user.bannerUrl && (user.coverStyle ?? 'mint') === key ? 'ring-2 ring-brand-600 ring-offset-2 ring-offset-surface' : ''}`}
               style={{ background }}
               aria-label={t('Copertina {n}', { n: key })}
-              aria-pressed={(user.coverStyle ?? 'mint') === key}
+              aria-pressed={!user.bannerUrl && (user.coverStyle ?? 'mint') === key}
             />
           ))}
         </div>
-        <FormError>{error}</FormError>
+        <FormError>{error || banner.error}</FormError>
       </Card>
 
       <Card className="p-5">
@@ -652,9 +719,9 @@ function PublicPreview() {
         <Eye className="h-3.5 w-3.5" /> {isClient ? t('Così ti vedono i tuoi professionisti') : t('Così ti vedono i tuoi clienti')}
       </p>
       <Card className="overflow-hidden">
-        <div className="h-16" style={{ background: COVERS[user.coverStyle] ?? COVERS.mint }} />
+        <Cover user={user} className="h-20" />
         <div className="px-5 pb-5">
-          <Avatar user={user} size="xl" className="-mt-10 ring-4 ring-surface" />
+          <Avatar user={user} size="xl" className="relative -mt-10 ring-4 ring-surface" />
           <p className="mt-2 font-display text-lg font-semibold">{displayName(user)}</p>
           <p className="text-sm text-ink-500">{isClient ? ROLE_LABELS.client : user.specialization || ROLE_LABELS[user.role]}</p>
           {!isClient && (

@@ -85,48 +85,77 @@ export function MetricTiles({ checkins, startWeight }) {
 export function MeasurementsTable({ checkins, canDelete, onDelete, meLabel }) {
   const rows = [...checkins].reverse();
   if (!rows.length) return <EmptyState title={t('Nessuna misurazione')} text={t('Le misurazioni registrate compariranno qui.')} />;
+  const authorOf = (c) => (c.source === 'self' ? (meLabel ?? CHECK_SOURCE.self) : c.author ? displayName(c.author) : CHECK_SOURCE[c.source]);
+  const dateOf = (c) => fmtDayKey(c.day, { day: 'numeric', month: 'short', year: 'numeric' });
+  const deleteButton = (c) =>
+    canDelete?.(c) && (
+      <ConfirmButton className="rounded-full p-2 text-ink-400 hover:bg-hover hover:text-ink-700" confirmLabel={t('Elimina')} onConfirm={() => onDelete(c)}>
+        <Trash2 className="h-4 w-4" aria-label={t('Elimina misurazione')} />
+      </ConfirmButton>
+    );
   return (
-    <div className="relative overflow-x-auto">
-      <table className="w-full min-w-[720px] text-sm">
-        <thead>
-          <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
-            <th className="pb-2 font-medium">{t('Data')}</th>
-            <th className="pb-2 font-medium">{t('Registrato da')}</th>
-            {METRICS.map((m) => (
-              <th key={m.key} className="pb-2 text-right font-medium">
-                {m.label} ({m.unit})
-              </th>
-            ))}
-            <th className="pb-2">
-              <span className="sr-only">{t('Azioni')}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {rows.map((c) => (
-            <tr key={c.id} className="align-top">
-              <td className="py-2.5 whitespace-nowrap">{fmtDayKey(c.day, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-              <td className="py-2.5 text-ink-700">
-                {c.source === 'self' ? (meLabel ?? CHECK_SOURCE.self) : c.author ? displayName(c.author) : CHECK_SOURCE[c.source]}
-                {c.notes && <p className="mt-0.5 max-w-[260px] text-xs text-ink-500 italic">“{c.notes}”</p>}
-              </td>
-              {METRICS.map((m) => (
-                <td key={m.key} className="py-2.5 text-right tabular-nums">
-                  {c[m.key] == null ? <span className="text-ink-300">—</span> : fmtNumber(c[m.key])}
-                </td>
+    <>
+      {/* Telefono: una scheda per misurazione, con i valori su più righe */}
+      <ul className="divide-y divide-line sm:hidden">
+        {rows.map((c) => (
+          <li key={c.id} className="py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{dateOf(c)}</p>
+                <p className="text-xs text-ink-500">{authorOf(c)}</p>
+              </div>
+              {deleteButton(c)}
+            </div>
+            <dl className="mt-2 grid grid-cols-3 gap-x-3 gap-y-2">
+              {METRICS.filter((m) => c[m.key] != null).map((m) => (
+                <div key={m.key} className="min-w-0">
+                  <dt className="truncate text-[11px] text-ink-500">{m.label}</dt>
+                  <dd className="text-sm font-medium tabular-nums">
+                    {fmtNumber(c[m.key])} <span className="text-xs font-normal text-ink-500">{m.unit}</span>
+                  </dd>
+                </div>
               ))}
-              <td className="py-1.5 text-right">
-                {canDelete?.(c) && (
-                  <ConfirmButton className="rounded-full p-2 text-ink-400 hover:bg-hover hover:text-ink-700" confirmLabel={t('Elimina')} onConfirm={() => onDelete(c)}>
-                    <Trash2 className="h-4 w-4" aria-label={t('Elimina misurazione')} />
-                  </ConfirmButton>
-                )}
-              </td>
+            </dl>
+            {c.notes && <p className="mt-2 text-xs text-ink-500 italic">“{c.notes}”</p>}
+          </li>
+        ))}
+      </ul>
+      <div className="relative hidden overflow-x-auto sm:block">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead>
+            <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
+              <th className="pb-2 font-medium">{t('Data')}</th>
+              <th className="pb-2 font-medium">{t('Registrato da')}</th>
+              {METRICS.map((m) => (
+                <th key={m.key} className="pb-2 text-right font-medium">
+                  {m.label} ({m.unit})
+                </th>
+              ))}
+              <th className="pb-2">
+                <span className="sr-only">{t('Azioni')}</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {rows.map((c) => (
+              <tr key={c.id} className="align-top">
+                <td className="py-2.5 whitespace-nowrap">{dateOf(c)}</td>
+                <td className="py-2.5 text-ink-700">
+                  {authorOf(c)}
+                  {c.notes && <p className="mt-0.5 max-w-[260px] text-xs text-ink-500 italic">“{c.notes}”</p>}
+                </td>
+                {METRICS.map((m) => (
+                  <td key={m.key} className="py-2.5 text-right tabular-nums">
+                    {c[m.key] == null ? <span className="text-ink-300">—</span> : fmtNumber(c[m.key])}
+                  </td>
+                ))}
+                <td className="py-1.5 text-right">{deleteButton(c)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

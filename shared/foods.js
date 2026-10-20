@@ -191,22 +191,48 @@ export function nutritionOf(food, quantity, unit) {
   return { kcal: Math.round(food.kcal * k), protein: r1(food.protein * k), carbs: r1(food.carbs * k), fat: r1(food.fat * k) };
 }
 
-/** Cerca alimenti per nome (italiano o inglese). */
-export function searchFoods(query, limit = 8) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const starts = [];
-  const contains = [];
-  for (const f of FOODS) {
-    const names = [f.it.toLowerCase(), f.en.toLowerCase()];
-    if (names.some((n) => n.startsWith(q) || n.split(/[\s']/).some((w) => w.startsWith(q)))) starts.push(f);
-    else if (names.some((n) => n.includes(q))) contains.push(f);
-  }
-  // Prima i nomi che iniziano con il testo cercato, dai più corti ("Mela" prima di "Melanzane")
-  const byStart = (x) => (x.it.toLowerCase().startsWith(q) || x.en.toLowerCase().startsWith(q) ? 0 : 1);
-  starts.sort((a, b) => byStart(a) - byStart(b) || a.it.length - b.it.length);
-  return [...starts, ...contains].slice(0, limit);
+/** Testo pronto per la ricerca: minuscolo e senza accenti ("Caffè" → "caffe"). */
+export const searchText = (s) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+// Nomi già preparati per la ricerca (calcolati una volta sola per alimento)
+const searchNames = new WeakMap();
+const namesOf = (f) => {
+  let names = searchNames.get(f);
+  if (!names) searchNames.set(f, (names = [f.it, f.en].map((n) => ({ text: searchText(n), words: searchText(n).split(/[^a-z0-9%]+/).filter(Boolean) }))));
+  return names;
+};
+
+/**
+ * Quanto un nome corrisponde alla ricerca (più basso = più pertinente), null se non corrisponde:
+ * 0 la prima parola è proprio quella cercata ("Mela, cruda"), 1 il nome inizia con il testo ("Melanzane"),
+ * 2-3 ogni parola cercata inizia una parola del nome ("Petto di pollo"), 4 il testo compare dentro il nome.
+ */
+function matchScore({ text, words }, q, tokens) {
+  if (words[0] === tokens[0] && (tokens.length === 1 || text.startsWith(q))) return 0;
+  if (text.startsWith(q)) return 1;
+  if (tokens.every((tk) => words.some((w) => w.startsWith(tk)))) return words[0].startsWith(tokens[0]) ? 2 : 3;
+  return tokens.every((tk) => text.includes(tk)) ? 4 : null;
 }
+
+/**
+ * Cerca in un elenco di alimenti per nome (italiano o inglese, anche più parole): prima i più pertinenti,
+ * a parità gli alimenti di base (priority più bassa) e poi i nomi più corti.
+ */
+export function rankFoods(list, query, limit = 8) {
+  const q = searchText(query.trim()).replace(/\s+/g, ' ');
+  if (!q) return [];
+  const tokens = q.split(' ');
+  const hits = [];
+  for (const f of list) {
+    const scores = namesOf(f).map((n) => matchScore(n, q, tokens)).filter((s) => s != null);
+    if (scores.length) hits.push({ f, score: Math.min(...scores) });
+  }
+  hits.sort((a, b) => a.score - b.score || (a.f.priority ?? 0) - (b.f.priority ?? 0) || a.f.it.length - b.f.it.length);
+  return hits.slice(0, limit).map((h) => h.f);
+}
+
+/** Cerca tra gli alimenti della libreria. */
+export const searchFoods = (query, limit = 8) => rankFoods(FOODS, query, limit);
 
 /** Alimento della libreria con questo nome (in una delle due lingue), se esiste. */
 export const findFoodByName = (name) => {

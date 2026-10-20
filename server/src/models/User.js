@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     avatarUrl: String, // foto profilo (immagine piccola salvata come data URL)
     avatarColor: { type: String, enum: AVATAR_COLORS },
     coverStyle: { type: String, enum: COVER_STYLES },
+    bannerUrl: String, // banner personalizzato (immagine larga salvata come data URL): profilo e Dashboard
     phone: String,
     city: { type: String, trim: true, maxlength: 60 },
     birthDate: String, // "YYYY-MM-DD"

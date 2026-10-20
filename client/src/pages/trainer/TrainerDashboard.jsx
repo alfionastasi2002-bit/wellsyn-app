@@ -78,7 +78,7 @@ export default function TrainerDashboard() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
         <StatCard icon={Users} label={t('Clienti attivi')} value={stats.activeClients.total} to="/app/clienti">
           <Delta value={stats.activeClients.newThisMonth} digits={0} goodWhen="up" /> {t('nuovi questo mese')}
         </StatCard>
@@ -142,26 +142,32 @@ function RecentClients({ clients }) {
         <EmptyState title={t('Nessun cliente')} text={t('Aggiungi il tuo primo cliente dalla sezione Clienti.')} />
       ) : (
         <div className="mt-4 relative overflow-x-auto">
-          <table className="w-full min-w-[460px] text-sm">
+          <table className="w-full text-sm sm:min-w-[460px]">
             <thead>
               <tr className="text-left text-[11px] tracking-wider text-ink-500 uppercase">
                 <th className="pr-4 pb-2 font-medium">{t('Cliente')}</th>
-                <th className="pr-4 pb-2 font-medium">{t('Obiettivo')}</th>
-                <th className="pr-4 pb-2 font-medium">{t('Ultimo allenamento')}</th>
+                <th className="hidden pr-4 pb-2 font-medium sm:table-cell">{t('Obiettivo')}</th>
+                <th className="pr-3 pb-2 font-medium sm:pr-4">
+                  <span className="sm:hidden">{t('Ultimo')}</span>
+                  <span className="hidden sm:inline">{t('Ultimo allenamento')}</span>
+                </th>
                 <th className="pb-2 font-medium whitespace-nowrap">{t('Aderenza')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {clients.map((c) => (
                 <tr key={c.linkId}>
-                  <td className="py-2.5 pr-4">
+                  <td className="py-2.5 pr-3 sm:pr-4">
                     <span className="flex items-center gap-2.5">
                       <Avatar user={c.client} size="sm" />
-                      <span className="font-medium">{c.client.fullName}</span>
+                      <span className="min-w-0">
+                        <span className="block font-medium">{c.client.fullName}</span>
+                        {c.program && <span className="block text-xs text-ink-500 sm:hidden">{t(c.program)}</span>}
+                      </span>
                     </span>
                   </td>
-                  <td className="py-2.5 pr-4 text-ink-700">{c.program ? t(c.program) : '—'}</td>
-                  <td className="py-2.5 pr-4 whitespace-nowrap text-ink-700">{relativeDay(c.lastWorkout)}</td>
+                  <td className="hidden py-2.5 pr-4 text-ink-700 sm:table-cell">{c.program ? t(c.program) : '—'}</td>
+                  <td className="py-2.5 pr-3 whitespace-nowrap text-ink-700 sm:pr-4">{relativeDay(c.lastWorkout)}</td>
                   <td className="py-2.5 whitespace-nowrap">
                     <span className="font-semibold">{c.adherence}%</span>{' '}
                     <Delta value={c.trend} suffix="%" digits={0} goodWhen="up" className="text-xs" />
@@ -199,22 +205,28 @@ function FeaturedPlan({ plan }) {
           </div>
           {plan.session && (
             <div className="mt-4 relative overflow-x-auto">
-              <table className="w-full min-w-[360px] text-[13px]">
+              <table className="w-full text-[13px] sm:min-w-[360px]">
                 <thead>
                   <tr className="text-left text-[10px] tracking-wider text-ink-500 uppercase">
                     <th className="pb-2 font-medium">{t('Esercizio')}</th>
-                    <th className="pb-2 text-center font-medium">{t('Serie')}</th>
-                    <th className="pb-2 text-center font-medium">{t('Ripetizioni')}</th>
-                    <th className="pb-2 text-right font-medium">{t('Recupero')}</th>
+                    <th className="px-1 pb-2 text-center font-medium">{t('Serie')}</th>
+                    <th className="px-1 pb-2 text-center font-medium">
+                      <span className="sm:hidden">{t('Rip.')}</span>
+                      <span className="hidden sm:inline">{t('Ripetizioni')}</span>
+                    </th>
+                    <th className="pb-2 text-right font-medium">
+                      <span className="sm:hidden">{t('Rec.')}</span>
+                      <span className="hidden sm:inline">{t('Recupero')}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
                   {plan.session.exercises.map((ex) => (
                     <tr key={ex.name}>
                       <td className="py-2 font-medium">{ex.name}</td>
-                      <td className="py-2 text-center text-ink-700">{ex.sets}</td>
-                      <td className="py-2 text-center text-ink-700">{ex.reps}</td>
-                      <td className="py-2 text-right text-ink-700">{ex.restSec ? `${ex.restSec} sec` : '—'}</td>
+                      <td className="px-1 py-2 text-center text-ink-700">{ex.sets}</td>
+                      <td className="px-1 py-2 text-center whitespace-nowrap text-ink-700">{ex.reps}</td>
+                      <td className="py-2 text-right whitespace-nowrap text-ink-700">{ex.restSec ? `${ex.restSec} sec` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

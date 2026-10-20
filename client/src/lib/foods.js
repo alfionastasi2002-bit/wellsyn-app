@@ -1,28 +1,107 @@
 // Libreria degli alimenti (condivisa con il server) + etichette e calcoli usati dall'editor dei piani alimentari.
+// Oltre agli alimenti della libreria (con quantità ed emoji curate) ci sono:
+// - la banca dati di quasi 3.000 alimenti generici (foodDatabase.js), caricata solo quando si cerca un alimento;
+// - i prodotti confezionati e di marca, cercati online tramite il server (Open Food Facts).
 import { getLanguage, localized, t } from '../i18n/index.js';
-import { FOOD_BY_ID, nutritionOf, recipeItems, recipesFor, searchFoods } from '../../../shared/foods.js';
+import { api } from './api.js';
+import { FOOD_BY_ID, FOODS, nutritionOf, rankFoods, recipeItems, recipesFor, searchFoods, searchText } from '../../../shared/foods.js';
 
 export * from '../../../shared/foods.js';
 
 /** Nome dell'alimento (o della ricetta) nella lingua attiva. */
 export const nameOf = (entry) => (getLanguage() === 'en' ? entry.en : entry.it);
 
+// Banca dati e prodotti confezionati
+
+let database = null; // alimenti della banca dati, quando è stata caricata
+let databaseLoading = null;
+const extraById = new Map(); // alimenti della banca dati e prodotti già scelti, per codice
+const LIBRARY_NAMES = new Set(FOODS.map((f) => searchText(f.it)));
+
+/** Carica la banca dati degli alimenti generici (una volta sola). */
+export function loadFoodDatabase() {
+  databaseLoading ??= import('./foodDatabase.js').then(({ FOOD_DATABASE }) => {
+    database = FOOD_DATABASE.map(([code, it, en, emoji, kcal, protein, carbs, fat, qty, unit, priority = 0]) => {
+      const food = { id: `cq-${code}`, it, en, emoji, kcal, protein, carbs, fat, qty, unit, priority, source: 'database' };
+      extraById.set(food.id, food);
+      return food;
+    });
+    return database;
+  });
+  return databaseLoading;
+}
+
+/** Prodotto confezionato (dal server) → alimento con i valori per 100 g o 100 ml. */
+function productToFood(p) {
+  const label = p.brand && !searchText(p.name).includes(searchText(p.brand)) ? `${p.name} (${p.brand})` : p.name;
+  return {
+    id: p.id,
+    it: label,
+    en: label,
+    brand: p.brand,
+    emoji: '🛒',
+    kcal: p.kcal,
+    protein: p.protein,
+    carbs: p.carbs,
+    fat: p.fat,
+    qty: p.qty,
+    unit: p.unit,
+    portion: p.portion ?? undefined,
+    piece: p.portion ?? undefined,
+    source: 'product',
+  };
+}
+
+/** Cerca prodotti confezionati e di marca (almeno 3 lettere). */
+export async function searchProducts(query, signal) {
+  const { products } = await api(`/foods/products?q=${encodeURIComponent(query.trim())}`, { signal });
+  return products.map((p) => {
+    const food = productToFood(p);
+    extraById.set(food.id, food);
+    return food;
+  });
+}
+
+/** Valori da salvare insieme all'alimento scelto, per ricalcolarlo anche quando la banca dati non è caricata. */
+export const foodInfoOf = (food) =>
+  food && food.source ? { kcal: food.kcal, protein: food.protein, carbs: food.carbs, fat: food.fat, portion: food.portion ?? null, emoji: food.emoji } : null;
+
+/** Alimento collegato a una riga del piano: dalla libreria, dalla banca dati o dai valori salvati con la riga. */
+export function foodOfItem(item) {
+  if (!item?.food) return null;
+  const known = FOOD_BY_ID[item.food] ?? extraById.get(item.food);
+  if (known) return known;
+  const info = item.foodInfo;
+  if (!info) return null;
+  return { id: item.food, it: item.name, en: item.name, emoji: info.emoji, kcal: info.kcal, protein: info.protein, carbs: info.carbs, fat: info.fat, portion: info.portion ?? undefined, piece: info.portion ?? undefined, unit: 'g', qty: 100, source: 'saved' };
+}
+
 // Unità di misura: abbreviazioni mostrate nei menu (g e ml sono uguali in tutte le lingue)
 const UNIT_TEXT = localized({ pz: 'pz', fetta: 'fetta', cucchiaio: 'cucchiaio', cucchiaino: 'cucchiaino', tazza: 'tazza', porzione: 'porzione', 'q.b.': 'q.b.' });
 export const unitLabel = (unit) => (unit === 'g' || unit === 'ml' ? unit : (UNIT_TEXT[unit] ?? unit));
 
-/** Suggerimenti per il campo "alimento": alimenti e ricette che corrispondono a ciò che si scrive. */
+const foodEntry = (f) => ({ kind: 'food', key: `f-${f.id}`, food: f, emoji: f.emoji, kcal: nutritionOf(f, f.qty, f.unit).kcal });
+
+/**
+ * Suggerimenti per il campo "alimento": alimenti della libreria e della banca dati (se caricata) e ricette
+ * che corrispondono a ciò che si scrive. I prodotti confezionati si aggiungono a parte (arrivano dal server).
+ */
 export function foodSuggestions(query, mealType) {
-  const q = query.trim().toLowerCase();
-  const recipes = recipesFor(mealType).filter((r) => !q || r.it.toLowerCase().includes(q) || r.en.toLowerCase().includes(q));
-  const foods = q ? searchFoods(q, 7) : [];
-  const recipeEntries = recipes.slice(0, q ? 3 : 5).map((r) => {
+  const q = query.trim();
+  const recipes = q ? rankFoods(recipesFor(mealType), q, 3) : recipesFor(mealType).slice(0, 5);
+  const recipeEntries = recipes.map((r) => {
     const items = recipeItems(r);
     return { kind: 'recipe', key: `r-${r.id}`, recipe: r, emoji: FOOD_BY_ID[r.items[0][0]]?.emoji ?? '🍽️', kcal: items.reduce((s, i) => s + i.kcal, 0), count: items.length };
   });
-  const foodEntries = foods.map((f) => ({ kind: 'food', key: `f-${f.id}`, food: f, emoji: f.emoji, kcal: nutritionOf(f, f.qty, f.unit).kcal }));
-  return q ? [...foodEntries, ...recipeEntries] : recipeEntries;
+  if (!q) return recipeEntries;
+  const library = searchFoods(q, 5);
+  // Dalla banca dati: i più pertinenti, senza ripetere gli alimenti della libreria con lo stesso nome
+  const more = database ? rankFoods(database, q, 12).filter((f) => !LIBRARY_NAMES.has(searchText(f.it))).slice(0, 8) : [];
+  return [...library.map(foodEntry), ...more.map(foodEntry), ...recipeEntries];
 }
+
+/** Voce di suggerimento per un prodotto confezionato. */
+export const productEntry = (f) => ({ ...foodEntry(f), kind: 'product', key: `p-${f.id}` });
 
 // Obiettivi del piano
 

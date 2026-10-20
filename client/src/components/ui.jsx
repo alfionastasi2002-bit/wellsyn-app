@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { locale, t, translateMessage } from '../i18n/index.js';
 
 /** Cerchio color menta con un'icona, usato nelle intestazioni delle card. */
-export function IconBadge({ icon: Icon, size = 'md', tone = 'brand' }) {
+export function IconBadge({ icon: Icon, size = 'md', tone = 'brand', className = '' }) {
   const sizes = { sm: 'h-9 w-9 [&>svg]:h-4 [&>svg]:w-4', md: 'h-11 w-11 [&>svg]:h-5 [&>svg]:w-5', lg: 'h-14 w-14 [&>svg]:h-6 [&>svg]:w-6' };
   const tones = {
     brand: 'bg-brand-50 text-brand-700',
@@ -11,7 +11,7 @@ export function IconBadge({ icon: Icon, size = 'md', tone = 'brand' }) {
     amber: 'bg-amber-50 text-amber-600',
   };
   return (
-    <span className={`grid shrink-0 place-items-center rounded-full ${sizes[size]} ${tones[tone]}`}>
+    <span className={`grid shrink-0 place-items-center rounded-full ${sizes[size]} ${tones[tone]} ${className}`}>
       <Icon strokeWidth={2} />
     </span>
   );
@@ -27,14 +27,16 @@ export function Card({ className = '', children, as: Tag = 'section', ...props }
 
 /** Intestazione di una card: icona + titolo + link opzionale a destra. */
 export function CardHeader({ icon, title, subtitle, action, className = '' }) {
+  // Se titolo e azione (es. il selettore del periodo) non stanno sulla stessa riga, l'azione va sotto:
+  // così il titolo non si spezza su tre righe nei riquadri stretti (telefoni)
   return (
-    <header className={`flex items-center gap-3 ${className}`}>
+    <header className={`flex items-center gap-x-3 gap-y-2 max-sm:flex-wrap ${className}`}>
       {icon && <IconBadge icon={icon} />}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 max-sm:min-w-[9.5rem]">
         <h2 className="text-[17px] leading-snug font-semibold text-ink-900">{title}</h2>
         {subtitle && <p className="truncate text-xs text-ink-500">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="ml-auto shrink-0">{action}</div>}
     </header>
   );
 }
@@ -110,7 +112,7 @@ export function RangeTabs({ value, onChange }) {
           role="tab"
           aria-selected={value === r.key}
           onClick={() => onChange(r.key)}
-          className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+          className={`rounded-full px-2 py-1 text-xs font-medium transition sm:px-2.5 ${
             value === r.key ? 'bg-brand-50 font-semibold text-brand-800' : 'text-ink-500 hover:bg-hover'
           }`}
         >

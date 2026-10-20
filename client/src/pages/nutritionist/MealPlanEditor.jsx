@@ -28,6 +28,7 @@ import { Avatar } from '../../components/Avatar.jsx';
 import { DatePicker, Popover } from '../../components/DatePicker.jsx';
 import { Chip, TargetBar } from '../../components/editor.jsx';
 import { numberToText, PageHeader, toNumber } from '../../components/forms.jsx';
+import { MobileSaveBar } from '../../components/MobileSaveBar.jsx';
 import { PlanPrint } from '../../components/PlanPrint.jsx';
 import { Card, ErrorState, PageLoader, Spinner } from '../../components/ui.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -267,6 +268,23 @@ export default function MealPlanEditor({ id }) {
           onPrint={() => setPrinting(true)}
         />
       </div>
+
+      {/* Telefono e tablet: salvataggio sempre a portata di mano */}
+      <MobileSaveBar
+        summary={
+          <>
+            <span className="block font-semibold text-ink-900">{t('Giorno {n}', { n: currentIndex + 1 })} · {fmtNumber(dayTotals(day).kcal, 0)} kcal</span>
+            {form.status === 'active' ? t('Pubblicato') : t('Bozza')}
+          </>
+        }
+      >
+        <button type="button" className="btn-soft px-3" onClick={() => save('draft')} disabled={Boolean(saving)} aria-label={form.status === 'active' ? t('Sposta in bozza') : t('Salva bozza')} title={form.status === 'active' ? t('Sposta in bozza') : t('Salva bozza')}>
+          {saving === 'draft' ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+        </button>
+        <button type="button" className="btn-primary px-5" onClick={() => save('active')} disabled={Boolean(saving)}>
+          {saving === 'active' ? <Spinner className="h-4 w-4 text-white" /> : <Send className="h-4 w-4" />} {form.status === 'active' ? t('Aggiorna') : t('Pubblica')}
+        </button>
+      </MobileSaveBar>
 
       {printing && (
         <PlanPrint

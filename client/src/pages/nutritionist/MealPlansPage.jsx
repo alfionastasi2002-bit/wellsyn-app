@@ -109,30 +109,31 @@ function MealPlanList() {
                   {p.needsReview && <StatusPill className="bg-amber-50 text-amber-700">{t('Da revisionare')}</StatusPill>}
                   <span className="text-ink-500">{t('Aggiornato il {date}', { date: fmtDate(p.updatedAt, { day: 'numeric', month: 'short' }) })}</span>
                 </div>
+                {/* Su telefono le azioni secondarie mostrano solo l'icona */}
                 <div className="flex flex-wrap gap-2">
                   <Link to={`/app/piani-alimentari/${p.id}`} className="btn-outline">
                     <Pencil className="h-4 w-4" /> {t('Modifica')}
                   </Link>
-                  <Link to={`/app/piani-alimentari/nuovo?da=${p.id}`} className="btn-soft" title={t('Usa questo piano come base per un altro cliente')}>
-                    <CopyPlus className="h-4 w-4" /> {t('Duplica')}
+                  <Link to={`/app/piani-alimentari/nuovo?da=${p.id}`} className="btn-soft max-sm:px-3" title={t('Usa questo piano come base per un altro cliente')}>
+                    <CopyPlus className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Duplica')}</span>
                   </Link>
                   {p.needsReview && (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { needsReview: false })}>
-                      <CircleCheck className="h-4 w-4" /> {t('Revisionato')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { needsReview: false })}>
+                      <CircleCheck className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Revisionato')}</span>
                     </button>
                   )}
                   {p.status === 'archived' ? (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { status: 'active' })}>
-                      <RotateCcw className="h-4 w-4" /> {t('Riattiva')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { status: 'active' })}>
+                      <RotateCcw className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Riattiva')}</span>
                     </button>
                   ) : (
-                    <button type="button" className="btn-soft" onClick={() => patch(p, { status: 'archived' })}>
-                      <Archive className="h-4 w-4" /> {t('Archivia')}
+                    <button type="button" className="btn-soft max-sm:px-3" onClick={() => patch(p, { status: 'archived' })}>
+                      <Archive className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Archivia')}</span>
                     </button>
                   )}
                   {p.status !== 'active' && (
-                    <ConfirmButton confirmLabel={t('Elimina')} onConfirm={() => remove(p)}>
-                      <Trash2 className="h-4 w-4" /> {t('Elimina')}
+                    <ConfirmButton className="btn-soft max-sm:px-3" confirmLabel={t('Elimina')} onConfirm={() => remove(p)}>
+                      <Trash2 className="h-4 w-4" /> <span className="max-sm:sr-only">{t('Elimina')}</span>
                     </ConfirmButton>
                   )}
                 </div>

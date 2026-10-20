@@ -10,7 +10,7 @@ import { Card, CardHeader, EmptyState, ErrorState, PageLoader, ProgressBar, Spin
 import { useAuth } from '../../context/AuthContext.jsx';
 import { t, translateMessage } from '../../i18n/index.js';
 import { api } from '../../lib/api.js';
-import { emojiOf, FOOD_BY_ID, goalOf, unitLabel } from '../../lib/foods.js';
+import { emojiOf, foodOfItem, goalOf, unitLabel } from '../../lib/foods.js';
 import { displayName, fmtDate, fmtNumber } from '../../lib/format.js';
 import { MEAL_META, WEEKDAYS } from '../../lib/labels.js';
 import { useApi } from '../../lib/useApi.js';
@@ -172,7 +172,7 @@ export default function NutritionPage() {
                           {items.map((item, j) => (
                             <li key={j} className="flex items-center gap-3 py-2">
                               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-soft text-lg leading-none" aria-hidden="true">
-                                {emojiOf(item.food ? FOOD_BY_ID[item.food] : null)}
+                                {emojiOf(foodOfItem(item))}
                               </span>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium">{item.name}</p>

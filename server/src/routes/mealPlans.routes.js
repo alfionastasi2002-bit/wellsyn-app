@@ -14,9 +14,24 @@ import { parse } from '../utils/validate.js';
 const router = Router();
 router.use(requireAuth, requireRole('nutritionist'));
 
+// Valori per 100 g (o 100 ml) di un alimento della banca dati o di un prodotto confezionato
+const foodInfoSchema = z
+  .object({
+    kcal: z.number().min(0).max(1000),
+    protein: z.number().min(0).max(100),
+    carbs: z.number().min(0).max(100),
+    fat: z.number().min(0).max(100),
+    portion: optionalNumber(0, 5000, 'Porzione'),
+    emoji: optionalText(16),
+  })
+  .optional()
+  .nullable()
+  .transform((v) => v ?? undefined);
+
 const itemSchema = z.object({
-  name: z.string({ error: 'Ogni alimento deve avere un nome.' }).trim().min(1, 'Ogni alimento deve avere un nome.').max(80, 'Nome dell’alimento troppo lungo.'),
+  name: z.string({ error: 'Ogni alimento deve avere un nome.' }).trim().min(1, 'Ogni alimento deve avere un nome.').max(140, 'Nome dell’alimento troppo lungo.'),
   food: optionalText(40),
+  foodInfo: foodInfoSchema,
   quantity: optionalNumber(0, 5000, 'Quantità'),
   unit: z.enum(FOOD_UNITS, { error: 'Unità di misura non valida.' }).optional().nullable().transform((v) => v ?? undefined),
   alternative: optionalText(120),

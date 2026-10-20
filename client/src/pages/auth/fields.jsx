@@ -1,11 +1,12 @@
-import { Dumbbell, Eye, EyeOff, UserRound, Utensils } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { ROLE_ICONS } from '../../components/RoleSymbol.jsx';
 import { localized, t } from '../../i18n/index.js';
 
 export const ROLE_OPTIONS = [
-  Object.assign(localized({ label: 'Cliente' }), { value: 'client', icon: UserRound }),
-  Object.assign(localized({ label: 'Nutrizionista' }), { value: 'nutritionist', icon: Utensils }),
-  Object.assign(localized({ label: 'Personal Trainer' }), { value: 'trainer', icon: Dumbbell }),
+  Object.assign(localized({ label: 'Cliente' }), { value: 'client', icon: ROLE_ICONS.client }),
+  Object.assign(localized({ label: 'Nutrizionista' }), { value: 'nutritionist', icon: ROLE_ICONS.nutritionist }),
+  Object.assign(localized({ label: 'Personal Trainer' }), { value: 'trainer', icon: ROLE_ICONS.trainer }),
 ];
 
 /** Selettore del profilo: Cliente / Nutrizionista / Personal Trainer. */
