@@ -5,6 +5,8 @@ Tre profili: **Cliente**, **Nutrizionista** e **Personal Trainer**, ognuno con l
 I professionisti lavorano in modo indipendente; il cliente decide se condividere con il team
 i dati raccolti dagli altri professionisti.
 
+**Sito online:** https://wellsyn.vercel.app (per entrare puoi usare gli [account demo](#account-demo)).
+
 ## Tecnologie
 
 | Parte | Tecnologia |
